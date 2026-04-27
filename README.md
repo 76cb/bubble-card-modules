@@ -1,6 +1,6 @@
 # Fan Speed Visual Center
 
-![Demo](demo.gif)
+![Demo](fan_speed_visual_center/demo.gif)
 
 Advanced Bubble Card module for Home Assistant that provides dynamic fan control with automatic speed detection, per-speed animation, and fully unified color selection using native Home Assistant-style editor forms.
 
