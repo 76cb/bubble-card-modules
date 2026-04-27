@@ -1,0 +1,1897 @@
+fan_speed_visual_center:
+  name: "Fan Speed Visual Center"
+  version: "v1.0.0"
+  creator: "76cb"
+  link: "https://github.com/76cb/bubble-card-modules/tree/main/fan_speed_visual_center"
+  supported:
+    - button
+  description: >
+    Advanced Bubble Card module for Home Assistant that provides automatic fan speed detection
+    (Off/Low/Medium/High), dynamic UI styling, per-speed animation control, and fully unified
+    color selection using native Home Assistant-style editor forms (preset, color wheel, custom,
+    and template support).
+
+  editor:
+    - type: expandable
+      title: "Fan & Speed Detection"
+      icon: "mdi:fan"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: fan_entity
+              label: "Fan Entity"
+              selector:
+                entity:
+                  filter:
+                    domain: fan
+
+            - name: low_max
+              label: "Low Max Percentage"
+              default: 40
+              selector:
+                number:
+                  min: 1
+                  max: 100
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "%"
+
+            - name: medium_max
+              label: "Medium Max Percentage"
+              default: 80
+              selector:
+                number:
+                  min: 1
+                  max: 100
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "%"
+
+    - type: expandable
+      title: "Main Icon"
+      icon: "mdi:rotate-360"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: enable_off_icon
+              label: "Use Off Icon"
+              default: true
+              selector:
+                boolean: {}
+
+            - name: off_icon
+              label: "Off Icon"
+              default: "mdi:fan-off"
+              selector:
+                icon: {}
+
+            - name: enable_spin_animation
+              label: "Spin Icon When Fan Is On"
+              default: true
+              selector:
+                boolean: {}
+
+        - type: grid
+          column_min_width: "180px"
+          schema:
+            - name: low_spin_seconds
+              label: "Low Spin Speed"
+              default: 2.4
+              selector:
+                number:
+                  min: 0.2
+                  max: 8
+                  step: 0.1
+                  mode: slider
+                  unit_of_measurement: "s"
+
+            - name: medium_spin_seconds
+              label: "Medium Spin Speed"
+              default: 1.4
+              selector:
+                number:
+                  min: 0.2
+                  max: 8
+                  step: 0.1
+                  mode: slider
+                  unit_of_measurement: "s"
+
+            - name: high_spin_seconds
+              label: "High Spin Speed"
+              default: 0.7
+              selector:
+                number:
+                  min: 0.2
+                  max: 8
+                  step: 0.1
+                  mode: slider
+                  unit_of_measurement: "s"
+
+    - type: expandable
+      title: "Inactive Sub-Buttons"
+      icon: "mdi:gesture-tap-button"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: inactive_background_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+            - name: inactive_background_theme
+              label: "Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: inactive_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: inactive_icon_theme
+              label: "Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: inactive_text_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: inactive_text_theme
+              label: "Text Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+
+            - name: inactive_opacity
+              label: "Inactive Opacity"
+              default: 65
+              selector:
+                number:
+                  min: 0
+                  max: 100
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "%"
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: inactive_background_wheel
+              label: "Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: inactive_icon_wheel
+              label: "Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: inactive_text_wheel
+              label: "Text Color wheel"
+              selector:
+                color_rgb: {}
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: inactive_background_manual
+              label: "Background Custom value"
+              default: "rgba(255,255,255,0.08)"
+              selector:
+                text: {}
+
+            - name: inactive_background_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: inactive_icon_manual
+              label: "Icon Custom value"
+              selector:
+                text: {}
+
+            - name: inactive_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: inactive_text_manual
+              label: "Text Custom value"
+              selector:
+                text: {}
+
+            - name: inactive_text_template
+              label: "JS template"
+              selector:
+                template: {}
+
+    - type: expandable
+      title: "Off State"
+      icon: "mdi:fan-off"
+      schema:
+        - type: grid
+          column_min_width: "180px"
+          schema:
+            - name: off_target
+              label: "Target Sub-Button"
+              default: 1
+              selector:
+                number:
+                  min: 1
+                  max: 8
+                  step: 1
+                  mode: box
+
+            - name: off_glow_enabled
+              label: "Enable Glow"
+              default: true
+              selector:
+                boolean: {}
+
+            - name: off_glow_size
+              label: "Glow Size"
+              default: 14
+              selector:
+                number:
+                  min: 0
+                  max: 50
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "px"
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: off_card_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+            - name: off_card_theme
+              label: "Card Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: off_icon_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: off_icon_bg_theme
+              label: "Main Icon Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: off_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: off_icon_theme
+              label: "Main Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: off_button_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: off_button_bg_theme
+              label: "Active Button Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: off_button_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: off_button_icon_theme
+              label: "Active Button Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: off_button_text_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: off_button_text_theme
+              label: "Active Button Text Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: off_glow_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: off_glow_theme
+              label: "Glow Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: off_card_wheel
+              label: "Card Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: off_icon_bg_wheel
+              label: "Main Icon Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: off_icon_wheel
+              label: "Main Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: off_button_bg_wheel
+              label: "Active Button Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: off_button_icon_wheel
+              label: "Active Button Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: off_button_text_wheel
+              label: "Active Button Text Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: off_glow_wheel
+              label: "Glow Color wheel"
+              selector:
+                color_rgb: {}
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: off_card_manual
+              label: "Card Background Custom value"
+              selector:
+                text: {}
+
+            - name: off_card_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: off_icon_bg_manual
+              label: "Main Icon Background Custom value"
+              selector:
+                text: {}
+
+            - name: off_icon_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: off_icon_manual
+              label: "Main Icon Custom value"
+              selector:
+                text: {}
+
+            - name: off_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: off_button_bg_manual
+              label: "Active Button Background Custom value"
+              default: "rgba(255,255,255,0.22)"
+              selector:
+                text: {}
+
+            - name: off_button_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: off_button_icon_manual
+              label: "Active Button Icon Custom value"
+              selector:
+                text: {}
+
+            - name: off_button_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: off_button_text_manual
+              label: "Active Button Text Custom value"
+              selector:
+                text: {}
+
+            - name: off_button_text_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: off_glow_manual
+              label: "Glow Custom value"
+              default: "rgba(255,255,255,0.55)"
+              selector:
+                text: {}
+
+            - name: off_glow_template
+              label: "JS template"
+              selector:
+                template: {}
+
+    - type: expandable
+      title: "Low State"
+      icon: "mdi:fan-speed-1"
+      schema:
+        - type: grid
+          column_min_width: "180px"
+          schema:
+            - name: low_target
+              label: "Target Sub-Button"
+              default: 2
+              selector:
+                number:
+                  min: 1
+                  max: 8
+                  step: 1
+                  mode: box
+
+            - name: low_glow_enabled
+              label: "Enable Glow"
+              default: true
+              selector:
+                boolean: {}
+
+            - name: low_glow_size
+              label: "Glow Size"
+              default: 14
+              selector:
+                number:
+                  min: 0
+                  max: 50
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "px"
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: low_card_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+            - name: low_card_theme
+              label: "Card Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: low_icon_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: low_icon_bg_theme
+              label: "Main Icon Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: low_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: low_icon_theme
+              label: "Main Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: low_button_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: low_button_bg_theme
+              label: "Active Button Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: low_button_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: low_button_icon_theme
+              label: "Active Button Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: low_button_text_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: low_button_text_theme
+              label: "Active Button Text Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: low_glow_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: low_glow_theme
+              label: "Glow Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: low_card_wheel
+              label: "Card Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: low_icon_bg_wheel
+              label: "Main Icon Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: low_icon_wheel
+              label: "Main Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: low_button_bg_wheel
+              label: "Active Button Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: low_button_icon_wheel
+              label: "Active Button Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: low_button_text_wheel
+              label: "Active Button Text Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: low_glow_wheel
+              label: "Glow Color wheel"
+              selector:
+                color_rgb: {}
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: low_card_manual
+              label: "Card Background Custom value"
+              selector:
+                text: {}
+
+            - name: low_card_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: low_icon_bg_manual
+              label: "Main Icon Background Custom value"
+              selector:
+                text: {}
+
+            - name: low_icon_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: low_icon_manual
+              label: "Main Icon Custom value"
+              selector:
+                text: {}
+
+            - name: low_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: low_button_bg_manual
+              label: "Active Button Background Custom value"
+              default: "rgba(76,175,80,0.25)"
+              selector:
+                text: {}
+
+            - name: low_button_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: low_button_icon_manual
+              label: "Active Button Icon Custom value"
+              selector:
+                text: {}
+
+            - name: low_button_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: low_button_text_manual
+              label: "Active Button Text Custom value"
+              selector:
+                text: {}
+
+            - name: low_button_text_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: low_glow_manual
+              label: "Glow Custom value"
+              default: "rgba(76,175,80,0.85)"
+              selector:
+                text: {}
+
+            - name: low_glow_template
+              label: "JS template"
+              selector:
+                template: {}
+
+    - type: expandable
+      title: "Medium State"
+      icon: "mdi:fan-speed-2"
+      schema:
+        - type: grid
+          column_min_width: "180px"
+          schema:
+            - name: medium_target
+              label: "Target Sub-Button"
+              default: 3
+              selector:
+                number:
+                  min: 1
+                  max: 8
+                  step: 1
+                  mode: box
+
+            - name: medium_glow_enabled
+              label: "Enable Glow"
+              default: true
+              selector:
+                boolean: {}
+
+            - name: medium_glow_size
+              label: "Glow Size"
+              default: 14
+              selector:
+                number:
+                  min: 0
+                  max: 50
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "px"
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: medium_card_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+            - name: medium_card_theme
+              label: "Card Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: medium_icon_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: medium_icon_bg_theme
+              label: "Main Icon Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: medium_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: medium_icon_theme
+              label: "Main Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: medium_button_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: medium_button_bg_theme
+              label: "Active Button Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: medium_button_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: medium_button_icon_theme
+              label: "Active Button Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: medium_button_text_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: medium_button_text_theme
+              label: "Active Button Text Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: medium_glow_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: medium_glow_theme
+              label: "Glow Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: medium_card_wheel
+              label: "Card Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: medium_icon_bg_wheel
+              label: "Main Icon Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: medium_icon_wheel
+              label: "Main Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: medium_button_bg_wheel
+              label: "Active Button Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: medium_button_icon_wheel
+              label: "Active Button Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: medium_button_text_wheel
+              label: "Active Button Text Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: medium_glow_wheel
+              label: "Glow Color wheel"
+              selector:
+                color_rgb: {}
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: medium_card_manual
+              label: "Card Background Custom value"
+              selector:
+                text: {}
+
+            - name: medium_card_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: medium_icon_bg_manual
+              label: "Main Icon Background Custom value"
+              selector:
+                text: {}
+
+            - name: medium_icon_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: medium_icon_manual
+              label: "Main Icon Custom value"
+              selector:
+                text: {}
+
+            - name: medium_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: medium_button_bg_manual
+              label: "Active Button Background Custom value"
+              default: "rgba(255,193,7,0.25)"
+              selector:
+                text: {}
+
+            - name: medium_button_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: medium_button_icon_manual
+              label: "Active Button Icon Custom value"
+              selector:
+                text: {}
+
+            - name: medium_button_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: medium_button_text_manual
+              label: "Active Button Text Custom value"
+              selector:
+                text: {}
+
+            - name: medium_button_text_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: medium_glow_manual
+              label: "Glow Custom value"
+              default: "rgba(255,193,7,0.85)"
+              selector:
+                text: {}
+
+            - name: medium_glow_template
+              label: "JS template"
+              selector:
+                template: {}
+
+    - type: expandable
+      title: "High State"
+      icon: "mdi:fan-speed-3"
+      schema:
+        - type: grid
+          column_min_width: "180px"
+          schema:
+            - name: high_target
+              label: "Target Sub-Button"
+              default: 4
+              selector:
+                number:
+                  min: 1
+                  max: 8
+                  step: 1
+                  mode: box
+
+            - name: high_glow_enabled
+              label: "Enable Glow"
+              default: true
+              selector:
+                boolean: {}
+
+            - name: high_glow_size
+              label: "Glow Size"
+              default: 14
+              selector:
+                number:
+                  min: 0
+                  max: 50
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "px"
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: high_card_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+            - name: high_card_theme
+              label: "Card Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: high_icon_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: high_icon_bg_theme
+              label: "Main Icon Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: high_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: high_icon_theme
+              label: "Main Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: high_button_bg_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: high_button_bg_theme
+              label: "Active Button Background Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: high_button_icon_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: high_button_icon_theme
+              label: "Active Button Icon Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: high_button_text_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: high_button_text_theme
+              label: "Active Button Text Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+            - name: high_glow_mode
+              label: "Color mode"
+              default: "preset"
+              selector:
+                select:
+                  mode: dropdown
+                  multiple: false
+                  custom_value: false
+                  options:
+                    - label: "Preset color"
+                      value: "preset"
+                    - label: "Color wheel"
+                      value: "wheel"
+                    - label: "Custom value"
+                      value: "manual"
+                    - label: "JS template"
+                      value: "template"
+
+
+
+            - name: high_glow_theme
+              label: "Glow Color"
+              selector:
+                ui_color:
+                  include_none: true
+                  include_state: true
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: high_card_wheel
+              label: "Card Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: high_icon_bg_wheel
+              label: "Main Icon Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: high_icon_wheel
+              label: "Main Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: high_button_bg_wheel
+              label: "Active Button Background Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: high_button_icon_wheel
+              label: "Active Button Icon Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: high_button_text_wheel
+              label: "Active Button Text Color wheel"
+              selector:
+                color_rgb: {}
+
+            - name: high_glow_wheel
+              label: "Glow Color wheel"
+              selector:
+                color_rgb: {}
+
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: high_card_manual
+              label: "Card Background Custom value"
+              selector:
+                text: {}
+
+            - name: high_card_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: high_icon_bg_manual
+              label: "Main Icon Background Custom value"
+              selector:
+                text: {}
+
+            - name: high_icon_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: high_icon_manual
+              label: "Main Icon Custom value"
+              selector:
+                text: {}
+
+            - name: high_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: high_button_bg_manual
+              label: "Active Button Background Custom value"
+              default: "rgba(244,67,54,0.25)"
+              selector:
+                text: {}
+
+            - name: high_button_bg_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: high_button_icon_manual
+              label: "Active Button Icon Custom value"
+              selector:
+                text: {}
+
+            - name: high_button_icon_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: high_button_text_manual
+              label: "Active Button Text Custom value"
+              selector:
+                text: {}
+
+            - name: high_button_text_template
+              label: "JS template"
+              selector:
+                template: {}
+
+            - name: high_glow_manual
+              label: "Glow Custom value"
+              default: "rgba(244,67,54,0.9)"
+              selector:
+                text: {}
+
+            - name: high_glow_template
+              label: "JS template"
+              selector:
+                template: {}
+
+  code: |
+    ${(() => {
+      const config = this.config.fan_speed_visual_center || {};
+      const fanEntity = config.fan_entity || this.config.entity;
+      const fan = fanEntity ? hass.states[fanEntity] : null;
+
+      const state = fan?.state || "off";
+      const pct = Number(fan?.attributes?.percentage || 0);
+      const isOn = state === "on";
+
+      const lowMax = Number(config.low_max ?? 40);
+      const mediumMax = Number(config.medium_max ?? 80);
+
+      let speed = "off";
+      if (isOn && pct > 0 && pct <= lowMax) speed = "low";
+      else if (isOn && pct > lowMax && pct <= mediumMax) speed = "medium";
+      else if (isOn && pct > mediumMax) speed = "high";
+
+      const rgbToCss = (rgb) => {
+        if (!Array.isArray(rgb)) return "";
+        return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+      };
+
+      const themeToCss = (value) => {
+        if (!value || value === "none") return "";
+        if (value === "state") return "var(--state-icon-active-color)";
+        if (value === "transparent") return "transparent";
+
+        const raw = String(value).trim();
+
+        if (
+          raw.startsWith("#") ||
+          raw.startsWith("rgb") ||
+          raw.startsWith("hsl") ||
+          raw.startsWith("var(") ||
+          raw === "white" ||
+          raw === "black" ||
+          raw === "transparent"
+        ) {
+          return raw;
+        }
+
+        return `var(--${raw}-color, ${raw})`;
+      };
+
+      const templateToCss = (template) => {
+        if (!template) return "";
+        try {
+          return Function("hass", "entity", "state", "pct", "speed", `return ();`)(hass, fan, state, pct, speed) || "";
+        } catch (e) {
+          try {
+            return Function("hass", "entity", "state", "pct", "speed", template)(hass, fan, state, pct, speed) || "";
+          } catch (err) {
+            return "";
+          }
+        }
+      };
+
+      const color = (base, fallback = "") => {
+        const mode = config[`${base}_mode`] || "preset";
+
+        if (mode === "manual") {
+          return String(config[`${base}_manual`] || "").trim() || fallback;
+        }
+
+        if (mode === "wheel") {
+          return rgbToCss(config[`${base}_wheel`]) || fallback;
+        }
+
+        if (mode === "template") {
+          return String(templateToCss(config[`${base}_template`])).trim() || fallback;
+        }
+
+        return themeToCss(config[`${base}_theme`]) || fallback;
+      };
+
+      const setVar = (name, value) => {
+        if (value) card.style.setProperty(name, value);
+        else card.style.removeProperty(name);
+      };
+
+      const findMainIcon = () => {
+        return card.querySelector(".bubble-icon") ||
+          card.querySelector(".bubble-icon-container ha-icon") ||
+          card.querySelector("ha-icon.bubble-icon");
+      };
+
+      const setMainIcon = (iconName) => {
+        const icon = findMainIcon();
+        if (!icon || !iconName) return;
+
+        try {
+          icon.icon = iconName;
+          icon.setAttribute("icon", iconName);
+        } catch (e) {}
+      };
+
+      const getSubButton = (number) => {
+        const direct = card.querySelector(`.bubble-sub-button-${number}`);
+        if (direct) return direct;
+
+        const buttons = Array.from(card.querySelectorAll(".bubble-sub-button"));
+        return buttons[number - 1] || null;
+      };
+
+      const setColorOnElements = (elements, cssColor) => {
+        elements.forEach((el) => {
+          if (cssColor) {
+            el.style.setProperty("color", cssColor, "important");
+            el.style.setProperty("fill", cssColor, "important");
+            el.style.setProperty("--primary-text-color", cssColor, "important");
+            el.style.setProperty("--secondary-text-color", cssColor, "important");
+          } else {
+            el.style.removeProperty("color");
+            el.style.removeProperty("fill");
+            el.style.removeProperty("--primary-text-color");
+            el.style.removeProperty("--secondary-text-color");
+          }
+        });
+      };
+
+      const styleButton = (button, { background = "", icon = "", text = "", opacity = "", glow = "" } = {}) => {
+        if (!button) return;
+
+        if (background) {
+          button.style.setProperty("background", background, "important");
+          button.style.setProperty("background-color", background, "important");
+          button.style.setProperty("--bubble-sub-button-background-color", background, "important");
+        } else {
+          button.style.removeProperty("background");
+          button.style.removeProperty("background-color");
+          button.style.removeProperty("--bubble-sub-button-background-color");
+        }
+
+        if (opacity !== "") button.style.setProperty("opacity", String(opacity), "important");
+        else button.style.removeProperty("opacity");
+
+        button.style.setProperty("box-shadow", glow || "none", "important");
+
+        if (icon) button.style.setProperty("--fan-sub-button-icon-color", icon);
+        else button.style.removeProperty("--fan-sub-button-icon-color");
+
+        if (text) {
+          button.style.setProperty("--fan-sub-button-text-color", text);
+          button.style.setProperty("--primary-text-color", text, "important");
+          button.style.setProperty("--secondary-text-color", text, "important");
+        } else {
+          button.style.removeProperty("--fan-sub-button-text-color");
+          button.style.removeProperty("--primary-text-color");
+          button.style.removeProperty("--secondary-text-color");
+        }
+
+        setColorOnElements(
+          button.querySelectorAll("ha-icon, .bubble-sub-button-icon, .bubble-icon"),
+          icon
+        );
+
+        setColorOnElements(
+          button.querySelectorAll(".bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, span, p"),
+          text
+        );
+      };
+
+      card.classList.remove(
+        "fan-speed-off",
+        "fan-speed-low",
+        "fan-speed-medium",
+        "fan-speed-high",
+        "fan-enable-glow",
+        "fan-spin-enabled"
+      );
+
+      card.classList.add(`fan-speed-${speed}`);
+
+      const inactiveBg = color("inactive_background", "rgba(255,255,255,0.08)");
+      const inactiveIcon = color("inactive_icon", "");
+      const inactiveText = color("inactive_text", "");
+      const inactiveOpacity = Number(config.inactive_opacity ?? 65) / 100;
+
+      setVar("--fan-card-background", color(`${speed}_card`, ""));
+      setVar("--fan-icon-background", color(`${speed}_icon_bg`, ""));
+      setVar("--fan-icon-color", color(`${speed}_icon`, ""));
+
+      setVar("--fan-inactive-subbutton-background", inactiveBg);
+      setVar("--fan-inactive-subbutton-icon-color", inactiveIcon);
+      setVar("--fan-inactive-subbutton-text-color", inactiveText);
+      card.style.setProperty("--fan-inactive-subbutton-opacity", String(inactiveOpacity));
+
+      const activeButtonBg = color(`${speed}_button_bg`, {
+        off: "rgba(255,255,255,0.22)",
+        low: "rgba(76,175,80,0.25)",
+        medium: "rgba(255,193,7,0.25)",
+        high: "rgba(244,67,54,0.25)"
+      }[speed]);
+
+      const activeButtonIcon = color(`${speed}_button_icon`, "");
+      const activeButtonText = color(`${speed}_button_text`, "");
+      const activeGlow = color(`${speed}_glow`, {
+        off: "rgba(255,255,255,0.55)",
+        low: "rgba(76,175,80,0.85)",
+        medium: "rgba(255,193,7,0.85)",
+        high: "rgba(244,67,54,0.9)"
+      }[speed]);
+
+      const target = Number(config[`${speed}_target`] ?? {
+        off: 1,
+        low: 2,
+        medium: 3,
+        high: 4
+      }[speed]);
+
+      const glowEnabled = config[`${speed}_glow_enabled`] !== false;
+      const glowSize = Number(config[`${speed}_glow_size`] ?? 14);
+
+      for (let i = 1; i <= 8; i++) {
+        styleButton(getSubButton(i), {
+          background: inactiveBg,
+          icon: inactiveIcon,
+          text: inactiveText,
+          opacity: inactiveOpacity
+        });
+      }
+
+      const activeButton = getSubButton(target);
+      if (activeButton) {
+        const glow = glowEnabled && activeGlow && glowSize > 0
+          ? `0 0 ${glowSize}px ${activeGlow}`
+          : "none";
+
+        if (glow !== "none") card.classList.add("fan-enable-glow");
+
+        styleButton(activeButton, {
+          background: activeButtonBg,
+          icon: activeButtonIcon || inactiveIcon,
+          text: activeButtonText || inactiveText,
+          opacity: 1,
+          glow
+        });
+      }
+
+      const baseIcon = this.config.icon || "mdi:fan";
+      const offIcon = config.off_icon || "mdi:fan-off";
+
+      if (config.enable_off_icon !== false && !isOn) {
+        setMainIcon(offIcon);
+        requestAnimationFrame(() => setMainIcon(offIcon));
+      } else {
+        setMainIcon(baseIcon);
+      }
+
+      if (config.enable_spin_animation !== false && isOn) {
+        let spinSeconds = Number(config.low_spin_seconds ?? 2.4);
+        if (speed === "medium") spinSeconds = Number(config.medium_spin_seconds ?? 1.4);
+        if (speed === "high") spinSeconds = Number(config.high_spin_seconds ?? 0.7);
+
+        card.style.setProperty("--fan-spin-speed", `${spinSeconds}s`);
+        card.classList.add("fan-spin-enabled");
+      } else {
+        card.style.removeProperty("--fan-spin-speed");
+      }
+
+      return "";
+    })()}
+
+    .bubble-button-card-container {
+      background: var(--fan-card-background, var(--ha-card-background, var(--card-background-color))) !important;
+      transition: background 0.25s ease, box-shadow 0.25s ease !important;
+    }
+
+    .bubble-icon-container {
+      background: var(--fan-icon-background, var(--bubble-icon-background-color, var(--bubble-secondary-background-color))) !important;
+      transition: background 0.25s ease, box-shadow 0.25s ease !important;
+    }
+
+    .bubble-icon,
+    .bubble-icon-container ha-icon {
+      color: var(--fan-icon-color, inherit) !important;
+      transition: color 0.25s ease, transform 0.25s ease !important;
+    }
+
+    .bubble-sub-button {
+      background: var(--fan-inactive-subbutton-background, rgba(255,255,255,0.08)) !important;
+      background-color: var(--fan-inactive-subbutton-background, rgba(255,255,255,0.08)) !important;
+      opacity: var(--fan-inactive-subbutton-opacity, 0.65) !important;
+      transition: background 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease !important;
+    }
+
+    .bubble-sub-button ha-icon,
+    .bubble-sub-button .bubble-sub-button-icon {
+      color: var(--fan-sub-button-icon-color, var(--fan-inactive-subbutton-icon-color, inherit)) !important;
+      fill: var(--fan-sub-button-icon-color, var(--fan-inactive-subbutton-icon-color, inherit)) !important;
+    }
+
+    .bubble-sub-button .bubble-sub-button-name,
+    .bubble-sub-button .bubble-sub-button-name-container,
+    .bubble-sub-button span,
+    .bubble-sub-button p {
+      color: var(--fan-sub-button-text-color, var(--fan-inactive-subbutton-text-color, inherit)) !important;
+    }
+
+    @keyframes fan-speed-visual-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .fan-spin-enabled .bubble-icon,
+    .fan-spin-enabled .bubble-icon-container ha-icon {
+      animation: fan-speed-visual-spin var(--fan-spin-speed, 1.5s) linear infinite !important;
+      transform-origin: center center !important;
+    }
