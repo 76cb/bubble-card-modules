@@ -1,5 +1,7 @@
 # Fan Speed Visual Center
 
+[![Discussion](https://img.shields.io/badge/Discussion-Bubble%20Card%20%232376-blue)](https://github.com/Clooos/Bubble-Card/discussions/2376)
+
 ![Demo](fan_speed_visual_center/demo.gif)
 
 Adds better fan control to Bubble Card with speed-based styling, animation, and color control.
