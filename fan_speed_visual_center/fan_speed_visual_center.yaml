@@ -1,19 +1,20 @@
 fan_speed_visual_center:
   name: "Fan Speed Visual Center"
-  version: "v1.0.0"
+  version: "v1.2.0"
   creator: "76cb"
   link: "https://github.com/76cb/bubble-card-modules/tree/main/fan_speed_visual_center"
   supported:
     - button
   description: >
-    Advanced Bubble Card module for Home Assistant that provides automatic fan speed detection
-    (Off/Low/Medium/High), dynamic UI styling, per-speed animation control, and fully unified
-    color selection using native Home Assistant-style editor forms (preset, color wheel, custom,
-    and template support).
+    Advanced Bubble Card module for Home Assistant fan controls. Uses normal
+    Bubble Card sub-buttons for Off/Power, user-defined speed percentages,
+    optional direction, optional presets, scalable button mapping, per-speed
+    animation, and full active/inactive/off styling. Off is configured
+    separately and should not be added to the speeds list.
 
   editor:
     - type: expandable
-      title: "Fan & Speed Detection"
+      title: "Fan Entity"
       icon: "mdi:fan"
       schema:
         - type: grid
@@ -26,69 +27,262 @@ fan_speed_visual_center:
                   filter:
                     domain: fan
 
-            - name: low_max
-              label: "Low Max Percentage"
-              default: 40
+    - type: expandable
+      title: "Button Mapping"
+      icon: "mdi:gesture-tap-button"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: off_target
+              label: "Off / Power Button Number"
+              description: "The Bubble Card sub-button number used for Off / Power. Button numbers start at 1."
+              default: 1
               selector:
                 number:
                   min: 1
-                  max: 100
+                  max: 20
                   step: 1
-                  mode: slider
-                  unit_of_measurement: "%"
-
-            - name: medium_max
-              label: "Medium Max Percentage"
-              default: 80
+                  mode: box
+            - name: speed_sub_button_start_index
+              label: "First Speed Button Number"
+              description: "The first sub-button used for speed controls. Speed 1 uses this number, Speed 2 uses the next number, and so on."
+              default: 2
               selector:
                 number:
                   min: 1
-                  max: 100
+                  max: 20
+                  step: 1
+                  mode: box
+            - name: auto_map_speed_buttons
+              label: "Auto-map Speed Buttons"
+              description: "Automatically map speeds in order based on the first speed button number. Individual speed Button Number values override this."
+              default: true
+              selector:
+                boolean: {}
+            - name: clear_all_sub_buttons
+              label: "Reset All Sub-Buttons"
+              description: "Reset all visible sub-buttons before applying active styles. Leave off unless old styling appears stuck."
+              default: false
+              selector:
+                boolean: {}
+            - name: sub_button_layout
+              label: "Sub-Button Layout"
+              default: "bubble_default"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Bubble Card default"
+                      value: "bubble_default"
+                    - label: "Control row"
+                      value: "control_row"
+                    - label: "Compact fill row"
+                      value: "compact_fill_row"
+                    - label: "Bottom control row"
+                      value: "bottom_control_row"
+            - name: hide_main_name_state
+              label: "Hide Main Name/State"
+              description: "Keeps the main icon visible, but hides the main name and state to make room for fan controls."
+              default: false
+              selector:
+                boolean: {}
+            - name: sub_button_min_width
+              label: "Button Min Width"
+              default: 48
+              selector:
+                number:
+                  min: 24
+                  max: 120
                   step: 1
                   mode: slider
-                  unit_of_measurement: "%"
+                  unit_of_measurement: "px"
+            - name: sub_button_max_width
+              label: "Button Max Width"
+              description: "Used by Compact fill row to keep buttons from becoming giant pills."
+              default: 68
+              selector:
+                number:
+                  min: 36
+                  max: 140
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "px"
+            - name: sub_button_justify
+              label: "Button Row Spacing"
+              description: "Used by Compact fill row."
+              default: "space-between"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Space between"
+                      value: "space-between"
+                    - label: "Center"
+                      value: "center"
+                    - label: "Start"
+                      value: "flex-start"
+                    - label: "End"
+                      value: "flex-end"
+            - name: sub_button_gap
+              label: "Button Gap"
+              default: 6
+              selector:
+                number:
+                  min: 0
+                  max: 24
+                  step: 1
+                  mode: slider
+                  unit_of_measurement: "px"
 
     - type: expandable
-      title: "Main Icon"
+      title: "Speeds"
+      icon: "mdi:speedometer"
+      schema:
+        - name: speeds
+          label: "Speed Buttons"
+          description: "Only add actual fan speed percentages here. Do not add Off. Off / Power is configured separately in the Off / Power Button section. Supports 2 to 10 speed buttons."
+          selector:
+            object:
+              multiple: true
+              label_field: name
+              fields:
+                name:
+                  label: "Speed Name"
+                  description: "User-facing speed name. Examples: Low, Medium, High, 1, 2, 3, Quiet, Sleep, Turbo."
+                  selector:
+                    text:
+                      multiline: false
+                value:
+                  label: "Speed Percentage"
+                  description: "The percentage sent to fan.set_percentage when this speed is tapped. Off is not valid here."
+                  selector:
+                    number:
+                      min: 1
+                      max: 100
+                      step: 1
+                      mode: slider
+                      unit_of_measurement: "%"
+                icon:
+                  label: "Speed Icon"
+                  description: "Icon for this speed's sub-button and optionally the main icon."
+                  selector:
+                    icon: {}
+                sub_button_index:
+                  label: "Button Number"
+                  description: "Optional. Leave blank to auto-map this speed. If set, this speed uses this exact Bubble Card sub-button number."
+                  selector:
+                    number:
+                      min: 1
+                      max: 20
+                      step: 1
+                      mode: box
+                style_preset:
+                  label: "Style Preset"
+                  description: "Optional active styling preset for this speed. If unset, the module assigns one automatically by speed order."
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Auto"
+                          value: "auto"
+                        - label: "Style Preset 1"
+                          value: "low"
+                        - label: "Style Preset 2"
+                          value: "medium"
+                        - label: "Style Preset 3"
+                          value: "high"
+                animate_icon:
+                  label: "Animate Main Icon"
+                  default: true
+                  selector:
+                    boolean: {}
+                spin_seconds:
+                  label: "Spin Speed"
+                  description: "Main icon spin speed when this speed is active. Lower numbers spin faster."
+                  selector:
+                    number:
+                      min: 0.2
+                      max: 8
+                      step: 0.1
+                      mode: slider
+                      unit_of_measurement: "s"
+                action_enabled:
+                  label: "Enable Tap Action"
+                  default: true
+                  selector:
+                    boolean: {}
+                button_bg_override:
+                  label: "Active Button Background Override"
+                  description: "Optional CSS color for this speed's active button. Leave blank to use the selected Style Preset."
+                  selector:
+                    text: {}
+                button_icon_override:
+                  label: "Active Button Icon Override"
+                  description: "Optional CSS color for this speed's active button icon."
+                  selector:
+                    text: {}
+                button_text_override:
+                  label: "Active Button Text Override"
+                  description: "Optional CSS color for this speed's active button text."
+                  selector:
+                    text: {}
+                glow_override:
+                  label: "Glow Color Override"
+                  description: "Optional CSS color for this speed's active glow."
+                  selector:
+                    text: {}
+
+    - type: expandable
+      title: "Main Icon / Animation"
       icon: "mdi:rotate-360"
       schema:
         - type: grid
           column_min_width: "220px"
           schema:
+            - name: main_icon_behavior
+              label: "Main Icon Behavior"
+              description: "Keep card icon leaves the Bubble Card icon unchanged and only animates/colors it."
+              default: "keep_card_icon"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Keep card icon"
+                      value: "keep_card_icon"
+                    - label: "Active speed icon"
+                      value: "active_speed_icon"
+                    - label: "On/Off icons"
+                      value: "on_off_icon"
+            - name: main_on_icon
+              label: "Main On Icon"
+              default: "mdi:fan"
+              selector:
+                icon: {}
+            - name: main_off_icon
+              label: "Main Off Icon"
+              default: "mdi:fan-off"
+              selector:
+                icon: {}
             - name: enable_off_icon
               label: "Use Off Icon"
               default: true
               selector:
                 boolean: {}
-
             - name: off_icon
-              label: "Off Icon"
+              label: "Legacy Off Icon"
+              description: "Backward-compatible fallback for Main Off Icon."
               default: "mdi:fan-off"
               selector:
                 icon: {}
-
             - name: enable_spin_animation
               label: "Spin Icon When Fan Is On"
               default: true
               selector:
                 boolean: {}
-
-        - type: grid
-          column_min_width: "180px"
-          schema:
-            - name: low_spin_seconds
-              label: "Low Spin Speed"
-              default: 2.4
-              selector:
-                number:
-                  min: 0.2
-                  max: 8
-                  step: 0.1
-                  mode: slider
-                  unit_of_measurement: "s"
-
-            - name: medium_spin_seconds
-              label: "Medium Spin Speed"
+            - name: default_spin_seconds
+              label: "Default Spin Speed"
+              description: "Used when an active speed does not define its own spin speed."
               default: 1.4
               selector:
                 number:
@@ -98,16 +292,49 @@ fan_speed_visual_center:
                   mode: slider
                   unit_of_measurement: "s"
 
-            - name: high_spin_seconds
-              label: "High Spin Speed"
-              default: 0.7
+    - type: expandable
+      title: "Off / Power Button"
+      icon: "mdi:power"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: off_name
+              label: "Off / Power Label"
+              default: "Off"
               selector:
-                number:
-                  min: 0.2
-                  max: 8
-                  step: 0.1
-                  mode: slider
-                  unit_of_measurement: "s"
+                text: {}
+            - name: off_button_icon
+              label: "Off Button Icon"
+              default: "mdi:power"
+              selector:
+                icon: {}
+            - name: off_action_enabled
+              label: "Enable Off / Power Action"
+              default: true
+              selector:
+                boolean: {}
+            - name: power_button_mode
+              label: "Power Button Mode"
+              default: "off_only"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Off only"
+                      value: "off_only"
+                    - label: "Toggle on/off"
+                      value: "toggle"
+            - name: power_button_on_icon
+              label: "Power On Icon"
+              default: "mdi:power-on"
+              selector:
+                icon: {}
+            - name: power_button_off_icon
+              label: "Power Off Icon"
+              default: "mdi:power"
+              selector:
+                icon: {}
 
     - type: expandable
       title: "Inactive Sub-Buttons"
@@ -258,7 +485,7 @@ fan_speed_visual_center:
                 template: {}
 
     - type: expandable
-      title: "Off State"
+      title: "Off State Style"
       icon: "mdi:fan-off"
       schema:
         - type: grid
@@ -590,22 +817,12 @@ fan_speed_visual_center:
                 template: {}
 
     - type: expandable
-      title: "Low State"
-      icon: "mdi:fan-speed-1"
+      title: "Style Preset 1"
+      icon: "mdi:numeric-1-circle"
       schema:
         - type: grid
           column_min_width: "180px"
           schema:
-            - name: low_target
-              label: "Target Sub-Button"
-              default: 2
-              selector:
-                number:
-                  min: 1
-                  max: 8
-                  step: 1
-                  mode: box
-
             - name: low_glow_enabled
               label: "Enable Glow"
               default: true
@@ -724,7 +941,7 @@ fan_speed_visual_center:
 
 
             - name: low_button_bg_theme
-              label: "Active Button Background Color"
+              label: "Active Speed Button Background Color"
               selector:
                 ui_color:
                   include_none: true
@@ -750,7 +967,7 @@ fan_speed_visual_center:
 
 
             - name: low_button_icon_theme
-              label: "Active Button Icon Color"
+              label: "Active Speed Button Icon Color"
               selector:
                 ui_color:
                   include_none: true
@@ -776,7 +993,7 @@ fan_speed_visual_center:
 
 
             - name: low_button_text_theme
-              label: "Active Button Text Color"
+              label: "Active Speed Button Text Color"
               selector:
                 ui_color:
                   include_none: true
@@ -827,17 +1044,17 @@ fan_speed_visual_center:
                 color_rgb: {}
 
             - name: low_button_bg_wheel
-              label: "Active Button Background Color wheel"
+              label: "Active Speed Button Background Color wheel"
               selector:
                 color_rgb: {}
 
             - name: low_button_icon_wheel
-              label: "Active Button Icon Color wheel"
+              label: "Active Speed Button Icon Color wheel"
               selector:
                 color_rgb: {}
 
             - name: low_button_text_wheel
-              label: "Active Button Text Color wheel"
+              label: "Active Speed Button Text Color wheel"
               selector:
                 color_rgb: {}
 
@@ -880,7 +1097,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: low_button_bg_manual
-              label: "Active Button Background Custom value"
+              label: "Active Speed Button Background Custom value"
               default: "rgba(76,175,80,0.25)"
               selector:
                 text: {}
@@ -891,7 +1108,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: low_button_icon_manual
-              label: "Active Button Icon Custom value"
+              label: "Active Speed Button Icon Custom value"
               selector:
                 text: {}
 
@@ -901,7 +1118,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: low_button_text_manual
-              label: "Active Button Text Custom value"
+              label: "Active Speed Button Text Custom value"
               selector:
                 text: {}
 
@@ -922,22 +1139,12 @@ fan_speed_visual_center:
                 template: {}
 
     - type: expandable
-      title: "Medium State"
-      icon: "mdi:fan-speed-2"
+      title: "Style Preset 2"
+      icon: "mdi:numeric-2-circle"
       schema:
         - type: grid
           column_min_width: "180px"
           schema:
-            - name: medium_target
-              label: "Target Sub-Button"
-              default: 3
-              selector:
-                number:
-                  min: 1
-                  max: 8
-                  step: 1
-                  mode: box
-
             - name: medium_glow_enabled
               label: "Enable Glow"
               default: true
@@ -1056,7 +1263,7 @@ fan_speed_visual_center:
 
 
             - name: medium_button_bg_theme
-              label: "Active Button Background Color"
+              label: "Active Speed Button Background Color"
               selector:
                 ui_color:
                   include_none: true
@@ -1082,7 +1289,7 @@ fan_speed_visual_center:
 
 
             - name: medium_button_icon_theme
-              label: "Active Button Icon Color"
+              label: "Active Speed Button Icon Color"
               selector:
                 ui_color:
                   include_none: true
@@ -1108,7 +1315,7 @@ fan_speed_visual_center:
 
 
             - name: medium_button_text_theme
-              label: "Active Button Text Color"
+              label: "Active Speed Button Text Color"
               selector:
                 ui_color:
                   include_none: true
@@ -1159,17 +1366,17 @@ fan_speed_visual_center:
                 color_rgb: {}
 
             - name: medium_button_bg_wheel
-              label: "Active Button Background Color wheel"
+              label: "Active Speed Button Background Color wheel"
               selector:
                 color_rgb: {}
 
             - name: medium_button_icon_wheel
-              label: "Active Button Icon Color wheel"
+              label: "Active Speed Button Icon Color wheel"
               selector:
                 color_rgb: {}
 
             - name: medium_button_text_wheel
-              label: "Active Button Text Color wheel"
+              label: "Active Speed Button Text Color wheel"
               selector:
                 color_rgb: {}
 
@@ -1212,7 +1419,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: medium_button_bg_manual
-              label: "Active Button Background Custom value"
+              label: "Active Speed Button Background Custom value"
               default: "rgba(255,193,7,0.25)"
               selector:
                 text: {}
@@ -1223,7 +1430,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: medium_button_icon_manual
-              label: "Active Button Icon Custom value"
+              label: "Active Speed Button Icon Custom value"
               selector:
                 text: {}
 
@@ -1233,7 +1440,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: medium_button_text_manual
-              label: "Active Button Text Custom value"
+              label: "Active Speed Button Text Custom value"
               selector:
                 text: {}
 
@@ -1254,22 +1461,12 @@ fan_speed_visual_center:
                 template: {}
 
     - type: expandable
-      title: "High State"
-      icon: "mdi:fan-speed-3"
+      title: "Style Preset 3"
+      icon: "mdi:numeric-3-circle"
       schema:
         - type: grid
           column_min_width: "180px"
           schema:
-            - name: high_target
-              label: "Target Sub-Button"
-              default: 4
-              selector:
-                number:
-                  min: 1
-                  max: 8
-                  step: 1
-                  mode: box
-
             - name: high_glow_enabled
               label: "Enable Glow"
               default: true
@@ -1388,7 +1585,7 @@ fan_speed_visual_center:
 
 
             - name: high_button_bg_theme
-              label: "Active Button Background Color"
+              label: "Active Speed Button Background Color"
               selector:
                 ui_color:
                   include_none: true
@@ -1414,7 +1611,7 @@ fan_speed_visual_center:
 
 
             - name: high_button_icon_theme
-              label: "Active Button Icon Color"
+              label: "Active Speed Button Icon Color"
               selector:
                 ui_color:
                   include_none: true
@@ -1440,7 +1637,7 @@ fan_speed_visual_center:
 
 
             - name: high_button_text_theme
-              label: "Active Button Text Color"
+              label: "Active Speed Button Text Color"
               selector:
                 ui_color:
                   include_none: true
@@ -1491,17 +1688,17 @@ fan_speed_visual_center:
                 color_rgb: {}
 
             - name: high_button_bg_wheel
-              label: "Active Button Background Color wheel"
+              label: "Active Speed Button Background Color wheel"
               selector:
                 color_rgb: {}
 
             - name: high_button_icon_wheel
-              label: "Active Button Icon Color wheel"
+              label: "Active Speed Button Icon Color wheel"
               selector:
                 color_rgb: {}
 
             - name: high_button_text_wheel
-              label: "Active Button Text Color wheel"
+              label: "Active Speed Button Text Color wheel"
               selector:
                 color_rgb: {}
 
@@ -1544,7 +1741,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: high_button_bg_manual
-              label: "Active Button Background Custom value"
+              label: "Active Speed Button Background Custom value"
               default: "rgba(244,67,54,0.25)"
               selector:
                 text: {}
@@ -1555,7 +1752,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: high_button_icon_manual
-              label: "Active Button Icon Custom value"
+              label: "Active Speed Button Icon Custom value"
               selector:
                 text: {}
 
@@ -1565,7 +1762,7 @@ fan_speed_visual_center:
                 template: {}
 
             - name: high_button_text_manual
-              label: "Active Button Text Custom value"
+              label: "Active Speed Button Text Custom value"
               selector:
                 text: {}
 
@@ -1585,6 +1782,385 @@ fan_speed_visual_center:
               selector:
                 template: {}
 
+    - type: expandable
+      title: "Direction"
+      icon: "mdi:swap-horizontal"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: enable_direction
+              label: "Enable Direction Button"
+              default: false
+              selector:
+                boolean: {}
+            - name: direction_sub_button_index
+              label: "Direction Button Number"
+              default: 5
+              selector:
+                number:
+                  min: 1
+                  max: 20
+                  step: 1
+                  mode: box
+            - name: direction_button_icon
+              label: "Direction Button Icon"
+              default: "mdi:swap-horizontal"
+              selector:
+                icon: {}
+            - name: direction_action_enabled
+              label: "Enable Direction Tap Action"
+              default: true
+              selector:
+                boolean: {}
+            - name: highlight_direction_button
+              label: "Highlight Direction Button"
+              default: true
+              selector:
+                boolean: {}
+            - name: direction_button_highlight_mode
+              label: "Direction Highlight Mode"
+              default: "always"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Always"
+                      value: "always"
+                    - label: "Reverse only"
+                      value: "reverse_only"
+                    - label: "Never"
+                      value: "never"
+            - name: direction_attribute
+              label: "Direction Attribute"
+              default: "direction"
+              selector:
+                text: {}
+            - name: forward_value
+              label: "Forward Value"
+              default: "forward"
+              selector:
+                text: {}
+            - name: reverse_value
+              label: "Reverse Value"
+              default: "reverse"
+              selector:
+                text: {}
+            - name: reverse_direction_animation
+              label: "Reverse Spin Animation"
+              default: false
+              selector:
+                boolean: {}
+            - name: forward_icon
+              label: "Forward Icon"
+              default: "mdi:fast-forward"
+              selector:
+                icon: {}
+            - name: reverse_icon
+              label: "Reverse Icon"
+              default: "mdi:keyboard-tab-reverse"
+              selector:
+                icon: {}
+
+    - type: expandable
+      title: "Presets"
+      icon: "mdi:tune-variant"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: enable_presets
+              label: "Enable Preset Buttons"
+              default: false
+              selector:
+                boolean: {}
+            - name: preset_attribute
+              label: "Preset Attribute"
+              default: "preset_mode"
+              selector:
+                text: {}
+            - name: preset_turn_on_first
+              label: "Turn On Before Preset"
+              description: "Useful for fans that turn on to a normal speed before accepting a preset like Smart/Breeze."
+              default: true
+              selector:
+                boolean: {}
+            - name: preset_set_delay_ms
+              label: "Preset Delay"
+              description: "Delay between fan.turn_on and fan.set_preset_mode when the fan is off."
+              default: 350
+              selector:
+                number:
+                  min: 0
+                  max: 2000
+                  step: 50
+                  mode: slider
+                  unit_of_measurement: "ms"
+        - name: preset_mappings
+          label: "Preset Buttons"
+          description: "Optional fan preset buttons. Each preset maps to an existing Bubble Card sub-button."
+          selector:
+            object:
+              multiple: true
+              label_field: label
+              fields:
+                label:
+                  label: "Preset Label"
+                  selector:
+                    text: {}
+                preset_value:
+                  label: "Preset Value"
+                  selector:
+                    text: {}
+                icon:
+                  label: "Preset Button Icon"
+                  description: "Icon used on the preset sub-button."
+                  selector:
+                    icon: {}
+                main_icon:
+                  label: "Main Icon When Active"
+                  description: "Optional. Replaces the main card icon while this preset is active."
+                  selector:
+                    icon: {}
+                animation_mode:
+                  label: "Main Icon Animation"
+                  description: "Animation used on the main card icon while this preset is active."
+                  default: "spin"
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "None"
+                          value: "none"
+                        - label: "Spin"
+                          value: "spin"
+                        - label: "Reverse Spin"
+                          value: "reverse_spin"
+                        - label: "Pulse"
+                          value: "pulse"
+                        - label: "Wobble"
+                          value: "wobble"
+                        - label: "Breeze"
+                          value: "breeze"
+                spin_seconds:
+                  label: "Animation Speed"
+                  description: "Lower numbers animate faster. Used only while this preset is active."
+                  default: 1.8
+                  selector:
+                    number:
+                      min: 0.2
+                      max: 10
+                      step: 0.1
+                      mode: slider
+                      unit_of_measurement: "s"
+                sub_button_index:
+                  label: "Button Number"
+                  selector:
+                    number:
+                      min: 1
+                      max: 20
+                      step: 1
+                      mode: box
+                style_preset:
+                  label: "Style Preset"
+                  description: "Active styling preset for this preset button. Color controls below can override this preset for Breeze/Smart or other fan presets."
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Style Preset 1"
+                          value: "low"
+                        - label: "Style Preset 2"
+                          value: "medium"
+                        - label: "Style Preset 3"
+                          value: "high"
+                button_bg_mode:
+                  label: "Button Background Mode"
+                  description: "Preset uses the selected Style Preset. Other modes override only this preset button."
+                  default: "style_preset"
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Use Style Preset"
+                          value: "style_preset"
+                        - label: "Preset color"
+                          value: "preset"
+                        - label: "Color wheel"
+                          value: "wheel"
+                        - label: "Custom value"
+                          value: "manual"
+                        - label: "JS template"
+                          value: "template"
+                button_bg_theme:
+                  label: "Button Background"
+                  selector:
+                    ui_color:
+                      include_none: true
+                      include_state: true
+                button_bg_wheel:
+                  label: "Button Background Color Wheel"
+                  selector:
+                    color_rgb: {}
+                button_bg_manual:
+                  label: "Button Background Custom Value"
+                  description: "CSS color, for example rgba(0, 188, 212, 0.28)."
+                  selector:
+                    text: {}
+                button_bg_template:
+                  label: "Button Background JS Template"
+                  description: "Return a CSS color. Available variables: hass, entity, state, pct, preset, currentPreset."
+                  selector:
+                    text:
+                      multiline: true
+
+                button_icon_mode:
+                  label: "Button Icon Mode"
+                  default: "style_preset"
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Use Style Preset"
+                          value: "style_preset"
+                        - label: "Preset color"
+                          value: "preset"
+                        - label: "Color wheel"
+                          value: "wheel"
+                        - label: "Custom value"
+                          value: "manual"
+                        - label: "JS template"
+                          value: "template"
+                button_icon_theme:
+                  label: "Button Icon Color"
+                  selector:
+                    ui_color:
+                      include_none: true
+                      include_state: true
+                button_icon_wheel:
+                  label: "Button Icon Color Wheel"
+                  selector:
+                    color_rgb: {}
+                button_icon_manual:
+                  label: "Button Icon Custom Value"
+                  selector:
+                    text: {}
+                button_icon_template:
+                  label: "Button Icon JS Template"
+                  description: "Return a CSS color. Available variables: hass, entity, state, pct, preset, currentPreset."
+                  selector:
+                    text:
+                      multiline: true
+
+                button_text_mode:
+                  label: "Button Text Mode"
+                  default: "style_preset"
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Use Style Preset"
+                          value: "style_preset"
+                        - label: "Preset color"
+                          value: "preset"
+                        - label: "Color wheel"
+                          value: "wheel"
+                        - label: "Custom value"
+                          value: "manual"
+                        - label: "JS template"
+                          value: "template"
+                button_text_theme:
+                  label: "Button Text Color"
+                  selector:
+                    ui_color:
+                      include_none: true
+                      include_state: true
+                button_text_wheel:
+                  label: "Button Text Color Wheel"
+                  selector:
+                    color_rgb: {}
+                button_text_manual:
+                  label: "Button Text Custom Value"
+                  selector:
+                    text: {}
+                button_text_template:
+                  label: "Button Text JS Template"
+                  description: "Return a CSS color. Available variables: hass, entity, state, pct, preset, currentPreset."
+                  selector:
+                    text:
+                      multiline: true
+
+                glow_mode:
+                  label: "Glow Mode"
+                  default: "style_preset"
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Use Style Preset"
+                          value: "style_preset"
+                        - label: "Preset color"
+                          value: "preset"
+                        - label: "Color wheel"
+                          value: "wheel"
+                        - label: "Custom value"
+                          value: "manual"
+                        - label: "JS template"
+                          value: "template"
+                glow_theme:
+                  label: "Glow Color"
+                  selector:
+                    ui_color:
+                      include_none: true
+                      include_state: true
+                glow_wheel:
+                  label: "Glow Color Wheel"
+                  selector:
+                    color_rgb: {}
+                glow_manual:
+                  label: "Glow Custom Value"
+                  selector:
+                    text: {}
+                glow_template:
+                  label: "Glow JS Template"
+                  description: "Return a CSS color. Available variables: hass, entity, state, pct, preset, currentPreset."
+                  selector:
+                    text:
+                      multiline: true
+                glow_enabled:
+                  label: "Enable Preset Glow"
+                  default: true
+                  selector:
+                    boolean: {}
+                glow_size:
+                  label: "Preset Glow Size"
+                  default: 14
+                  selector:
+                    number:
+                      min: 0
+                      max: 40
+                      step: 1
+                      mode: slider
+                      unit_of_measurement: "px"
+                action_enabled:
+                  label: "Enable Tap Action"
+                  default: true
+                  selector:
+                    boolean: {}
+
+    - type: expandable
+      title: "Advanced"
+      icon: "mdi:cog-outline"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: debug
+              label: "Debug Logging"
+              default: false
+              selector:
+                boolean: {}
+
   code: |
     ${(() => {
       const config = this.config.fan_speed_visual_center || {};
@@ -1594,14 +2170,13 @@ fan_speed_visual_center:
       const state = fan?.state || "off";
       const pct = Number(fan?.attributes?.percentage || 0);
       const isOn = state === "on";
+      const debug = (...args) => { if (config.debug) console.debug("[fan_speed_visual_center]", ...args); };
 
-      const lowMax = Number(config.low_max ?? 40);
-      const mediumMax = Number(config.medium_max ?? 80);
-
-      let speed = "off";
-      if (isOn && pct > 0 && pct <= lowMax) speed = "low";
-      else if (isOn && pct > lowMax && pct <= mediumMax) speed = "medium";
-      else if (isOn && pct > mediumMax) speed = "high";
+      const clampNumber = (value, min, max) => {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return null;
+        return Math.min(max, Math.max(min, n));
+      };
 
       const rgbToCss = (rgb) => {
         if (!Array.isArray(rgb)) return "";
@@ -1612,53 +2187,68 @@ fan_speed_visual_center:
         if (!value || value === "none") return "";
         if (value === "state") return "var(--state-icon-active-color)";
         if (value === "transparent") return "transparent";
-
         const raw = String(value).trim();
-
         if (
-          raw.startsWith("#") ||
-          raw.startsWith("rgb") ||
-          raw.startsWith("hsl") ||
-          raw.startsWith("var(") ||
-          raw === "white" ||
-          raw === "black" ||
-          raw === "transparent"
-        ) {
-          return raw;
-        }
-
+          raw.startsWith("#") || raw.startsWith("rgb") || raw.startsWith("hsl") ||
+          raw.startsWith("var(") || raw === "white" || raw === "black" || raw === "transparent"
+        ) return raw;
         return `var(--${raw}-color, ${raw})`;
       };
 
-      const templateToCss = (template) => {
+      const templateToCss = (template, extra = {}) => {
         if (!template) return "";
         try {
-          return Function("hass", "entity", "state", "pct", "speed", `return ();`)(hass, fan, state, pct, speed) || "";
+          return Function("hass", "entity", "state", "pct", "activeSpeed", "styleKey", `return (${template});`)(hass, fan, state, pct, extra.activeSpeed, extra.styleKey) || "";
         } catch (e) {
           try {
-            return Function("hass", "entity", "state", "pct", "speed", template)(hass, fan, state, pct, speed) || "";
+            return Function("hass", "entity", "state", "pct", "activeSpeed", "styleKey", template)(hass, fan, state, pct, extra.activeSpeed, extra.styleKey) || "";
           } catch (err) {
+            debug("Template color failed", err);
             return "";
           }
         }
       };
 
-      const color = (base, fallback = "") => {
+      const color = (base, fallback = "", extra = {}) => {
         const mode = config[`${base}_mode`] || "preset";
-
-        if (mode === "manual") {
-          return String(config[`${base}_manual`] || "").trim() || fallback;
-        }
-
-        if (mode === "wheel") {
-          return rgbToCss(config[`${base}_wheel`]) || fallback;
-        }
-
-        if (mode === "template") {
-          return String(templateToCss(config[`${base}_template`])).trim() || fallback;
-        }
-
+        if (mode === "manual") return String(config[`${base}_manual`] || "").trim() || fallback;
+        if (mode === "wheel") return rgbToCss(config[`${base}_wheel`]) || fallback;
+        if (mode === "template") return String(templateToCss(config[`${base}_template`], extra)).trim() || fallback;
         return themeToCss(config[`${base}_theme`]) || fallback;
+      };
+
+      const objectTemplateToCss = (template, preset = {}) => {
+        if (!template) return "";
+        try {
+          return Function("hass", "entity", "state", "pct", "preset", "currentPreset", `return (${template});`)(hass, fan, state, pct, preset, currentPreset) || "";
+        } catch (e) {
+          try {
+            return Function("hass", "entity", "state", "pct", "preset", "currentPreset", template)(hass, fan, state, pct, preset, currentPreset) || "";
+          } catch (err) {
+            debug("Preset template color failed", err);
+            return "";
+          }
+        }
+      };
+
+      const objectColor = (obj, base, fallback = "") => {
+        if (!obj) return fallback;
+
+        // Backward-compatible support for the older CSS-only override fields.
+        const legacyKey = base === "button_bg" ? "button_bg_override"
+          : base === "button_icon" ? "button_icon_override"
+          : base === "button_text" ? "button_text_override"
+          : base === "glow" ? "glow_override"
+          : "";
+        if (legacyKey && obj[legacyKey]) return String(obj[legacyKey]).trim() || fallback;
+
+        const mode = obj[`${base}_mode`] || "style_preset";
+        if (mode === "style_preset") return fallback;
+        if (mode === "preset") return themeToCss(obj[`${base}_theme`]) || fallback;
+        if (mode === "manual") return String(obj[`${base}_manual`] || "").trim() || fallback;
+        if (mode === "wheel") return rgbToCss(obj[`${base}_wheel`]) || fallback;
+        if (mode === "template") return String(objectTemplateToCss(obj[`${base}_template`], obj)).trim() || fallback;
+        return themeToCss(obj[`${base}_theme`]) || fallback;
       };
 
       const setVar = (name, value) => {
@@ -1666,28 +2256,134 @@ fan_speed_visual_center:
         else card.style.removeProperty(name);
       };
 
-      const findMainIcon = () => {
-        return card.querySelector(".bubble-icon") ||
-          card.querySelector(".bubble-icon-container ha-icon") ||
-          card.querySelector("ha-icon.bubble-icon");
+      const getConfiguredSpeeds = () => {
+        const raw = Array.isArray(config.speeds) ? config.speeds : [];
+        const speeds = [];
+        raw.forEach((s, idx) => {
+          const value = clampNumber(s?.value, 1, 100);
+          if (value === null) {
+            debug("Ignoring invalid speed entry because value is missing or invalid.", s);
+            return;
+          }
+          speeds.push({
+            ...s,
+            index: speeds.length,
+            value,
+            name: String(s?.name || `Speed ${speeds.length + 1}`),
+            icon: s?.icon || "mdi:fan",
+            animate_icon: s?.animate_icon !== false,
+            action_enabled: s?.action_enabled !== false,
+          });
+        });
+
+        if (speeds.length > 0) return speeds.slice(0, 10).sort((a, b) => a.value - b.value);
+
+        // Backward-compatible fallback for the original 3-speed config.
+        const lowMax = Number(config.low_max ?? 40);
+        const mediumMax = Number(config.medium_max ?? 80);
+        return [
+          { index: 0, name: "Speed 1", value: lowMax, icon: "mdi:fan-speed-1", animate_icon: true, action_enabled: true, style_preset: "low" },
+          { index: 1, name: "Speed 2", value: mediumMax, icon: "mdi:fan-speed-2", animate_icon: true, action_enabled: true, style_preset: "medium" },
+          { index: 2, name: "Speed 3", value: 100, icon: "mdi:fan-speed-3", animate_icon: true, action_enabled: true, style_preset: "high" },
+        ];
       };
 
+      const speeds = getConfiguredSpeeds();
+
+      const normalizeStyleKey = (value) => {
+        if (["low", "medium", "high"].includes(value)) return value;
+        if (["preset_1", "style_1", "1"].includes(String(value))) return "low";
+        if (["preset_2", "style_2", "2"].includes(String(value))) return "medium";
+        if (["preset_3", "style_3", "3"].includes(String(value))) return "high";
+        return "";
+      };
+
+      const getPresetValue = () => {
+        if (!fan) return "";
+        const attrName = config.preset_attribute || "preset_mode";
+        if (attrName === "state") return String(fan.state || "");
+        const attrValue = fan.attributes?.[attrName];
+        if (attrValue !== undefined && attrValue !== null && String(attrValue) !== "") return String(attrValue);
+        if (config.enable_presets === true && Array.isArray(config.preset_mappings)) {
+          const stateValue = String(fan.state || "");
+          const stateMatchesPreset = config.preset_mappings.some((preset) => preset?.preset_value && String(preset.preset_value) === stateValue);
+          if (stateMatchesPreset) return stateValue;
+        }
+        return "";
+      };
+
+      const getPresetMatch = (presetValue) => {
+        if (config.enable_presets !== true || !Array.isArray(config.preset_mappings) || !presetValue) return null;
+        return config.preset_mappings.find((preset) => preset?.preset_value && String(preset.preset_value) === String(presetValue)) || null;
+      };
+
+      const currentPreset = getPresetValue();
+      const presetMatch = getPresetMatch(currentPreset);
+
+      const getActiveSpeed = () => {
+        // Presets like Inovelli Smart/Breeze are exclusive active modes.
+        // Do not also highlight a normal percentage speed while a configured preset is active.
+        if (presetMatch) return null;
+        if (!isOn || pct <= 0 || speeds.length === 0) return null;
+        return speeds.reduce((best, s) => {
+          if (!best) return s;
+          const d = Math.abs(s.value - pct);
+          const bd = Math.abs(best.value - pct);
+          if (d < bd) return s;
+          if (d === bd && s.value > best.value) return s;
+          return best;
+        }, null);
+      };
+
+      const activeSpeed = getActiveSpeed();
+
+      const getStyleKeyForSpeed = (speed) => {
+        const explicit = normalizeStyleKey(speed?.style_preset || speed?.style_bucket);
+        if (explicit) return explicit;
+        const count = Math.max(1, speeds.length);
+        const position = speed ? speed.index / Math.max(1, count - 1) : 0;
+        if (position <= 0.33) return "low";
+        if (position <= 0.66) return "medium";
+        return "high";
+      };
+
+      const activeStyleKey = presetMatch
+        ? (normalizeStyleKey(presetMatch.style_preset) || "medium")
+        : (activeSpeed ? getStyleKeyForSpeed(activeSpeed) : "off");
+
+      // Preset modes such as Inovelli Smart/Breeze may report percentage as 0 or omit percentage.
+      // A configured matching preset is an active fan mode and must not be styled as Off.
+      const hardOffStates = ["off", "unavailable", "unknown"];
+      const fanOff = hardOffStates.includes(state) && !presetMatch;
+
+      const findMainIcon = () => card.querySelector(".bubble-icon") || card.querySelector(".bubble-icon-container ha-icon") || card.querySelector("ha-icon.bubble-icon");
       const setMainIcon = (iconName) => {
         const icon = findMainIcon();
         if (!icon || !iconName) return;
+        try { icon.icon = iconName; icon.setAttribute("icon", iconName); } catch (e) {}
+      };
 
-        try {
-          icon.icon = iconName;
-          icon.setAttribute("icon", iconName);
-        } catch (e) {}
+      const setIconInButton = (button, iconName) => {
+        if (!button || !iconName) return;
+        const icon = button.querySelector("ha-icon");
+        if (!icon) return;
+        try { icon.icon = iconName; icon.setAttribute("icon", iconName); } catch (e) {}
       };
 
       const getSubButton = (number) => {
-        const direct = card.querySelector(`.bubble-sub-button-${number}`);
+        const n = Number(number);
+        if (!Number.isFinite(n) || n < 1) return null;
+        const direct = card.querySelector(`.bubble-sub-button-${n}`);
         if (direct) return direct;
-
         const buttons = Array.from(card.querySelectorAll(".bubble-sub-button"));
-        return buttons[number - 1] || null;
+        return buttons[n - 1] || null;
+      };
+
+      const getSpeedButtonNumber = (speed) => {
+        const explicit = Number(speed?.sub_button_index);
+        if (Number.isFinite(explicit) && explicit >= 1) return explicit;
+        if (config.auto_map_speed_buttons !== false) return Number(config.speed_sub_button_start_index ?? 2) + speed.index;
+        return null;
       };
 
       const setColorOnElements = (elements, cssColor) => {
@@ -1708,7 +2404,6 @@ fan_speed_visual_center:
 
       const styleButton = (button, { background = "", icon = "", text = "", opacity = "", glow = "" } = {}) => {
         if (!button) return;
-
         if (background) {
           button.style.setProperty("background", background, "important");
           button.style.setProperty("background-color", background, "important");
@@ -1718,15 +2413,11 @@ fan_speed_visual_center:
           button.style.removeProperty("background-color");
           button.style.removeProperty("--bubble-sub-button-background-color");
         }
-
         if (opacity !== "") button.style.setProperty("opacity", String(opacity), "important");
         else button.style.removeProperty("opacity");
-
         button.style.setProperty("box-shadow", glow || "none", "important");
-
         if (icon) button.style.setProperty("--fan-sub-button-icon-color", icon);
         else button.style.removeProperty("--fan-sub-button-icon-color");
-
         if (text) {
           button.style.setProperty("--fan-sub-button-text-color", text);
           button.style.setProperty("--primary-text-color", text, "important");
@@ -1736,112 +2427,217 @@ fan_speed_visual_center:
           button.style.removeProperty("--primary-text-color");
           button.style.removeProperty("--secondary-text-color");
         }
+        setColorOnElements(button.querySelectorAll("ha-icon, .bubble-sub-button-icon, .bubble-icon"), icon);
+        setColorOnElements(button.querySelectorAll(".bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, span, p"), text);
+      };
 
-        setColorOnElements(
-          button.querySelectorAll("ha-icon, .bubble-sub-button-icon, .bubble-icon"),
-          icon
-        );
+      const attachAction = (button, fn) => {
+        if (!button) return;
+        button.onclick = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          try { fn(); } catch (err) { debug("Action failed", err); }
+        };
+      };
 
-        setColorOnElements(
-          button.querySelectorAll(".bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, span, p"),
-          text
-        );
+      const callFanService = (service, data = {}) => {
+        if (!fanEntity || !hass?.callService) {
+          debug("Skipping service call; missing fan entity or hass.callService", service, data);
+          return;
+        }
+        hass.callService("fan", service, { entity_id: fanEntity, ...data });
       };
 
       card.classList.remove(
-        "fan-speed-off",
-        "fan-speed-low",
-        "fan-speed-medium",
-        "fan-speed-high",
-        "fan-enable-glow",
-        "fan-spin-enabled"
+        "fan-speed-off", "fan-speed-active", "fan-style-low", "fan-style-medium", "fan-style-high",
+        "fan-enable-glow", "fan-spin-enabled", "fan-spin-reverse",
+        "fan-preset-pulse", "fan-preset-wobble", "fan-preset-breeze",
+        "fan-layout-control-row", "fan-layout-compact-fill-row", "fan-layout-bottom-control-row", "fan-hide-main-name-state"
       );
-
-      card.classList.add(`fan-speed-${speed}`);
+      card.classList.add(fanOff ? "fan-speed-off" : "fan-speed-active");
+      if (activeSpeed) card.classList.add(`fan-style-${activeStyleKey}`);
+      if (config.sub_button_layout === "control_row") card.classList.add("fan-layout-control-row");
+      if (config.sub_button_layout === "compact_fill_row") card.classList.add("fan-layout-compact-fill-row");
+      if (config.sub_button_layout === "bottom_control_row") card.classList.add("fan-layout-bottom-control-row");
+      if (config.hide_main_name_state === true) card.classList.add("fan-hide-main-name-state");
+      card.style.setProperty("--fan-sub-button-min-width", `${Number(config.sub_button_min_width ?? 48)}px`);
+      card.style.setProperty("--fan-sub-button-max-width", `${Number(config.sub_button_max_width ?? 68)}px`);
+      card.style.setProperty("--fan-sub-button-gap", `${Number(config.sub_button_gap ?? 6)}px`);
+      card.style.setProperty("--fan-sub-button-justify", String(config.sub_button_justify || "space-between"));
 
       const inactiveBg = color("inactive_background", "rgba(255,255,255,0.08)");
       const inactiveIcon = color("inactive_icon", "");
       const inactiveText = color("inactive_text", "");
       const inactiveOpacity = Number(config.inactive_opacity ?? 65) / 100;
-
-      setVar("--fan-card-background", color(`${speed}_card`, ""));
-      setVar("--fan-icon-background", color(`${speed}_icon_bg`, ""));
-      setVar("--fan-icon-color", color(`${speed}_icon`, ""));
-
       setVar("--fan-inactive-subbutton-background", inactiveBg);
       setVar("--fan-inactive-subbutton-icon-color", inactiveIcon);
       setVar("--fan-inactive-subbutton-text-color", inactiveText);
       card.style.setProperty("--fan-inactive-subbutton-opacity", String(inactiveOpacity));
 
-      const activeButtonBg = color(`${speed}_button_bg`, {
-        off: "rgba(255,255,255,0.22)",
-        low: "rgba(76,175,80,0.25)",
-        medium: "rgba(255,193,7,0.25)",
-        high: "rgba(244,67,54,0.25)"
-      }[speed]);
-
-      const activeButtonIcon = color(`${speed}_button_icon`, "");
-      const activeButtonText = color(`${speed}_button_text`, "");
-      const activeGlow = color(`${speed}_glow`, {
-        off: "rgba(255,255,255,0.55)",
-        low: "rgba(76,175,80,0.85)",
-        medium: "rgba(255,193,7,0.85)",
-        high: "rgba(244,67,54,0.9)"
-      }[speed]);
-
-      const target = Number(config[`${speed}_target`] ?? {
-        off: 1,
-        low: 2,
-        medium: 3,
-        high: 4
-      }[speed]);
-
-      const glowEnabled = config[`${speed}_glow_enabled`] !== false;
-      const glowSize = Number(config[`${speed}_glow_size`] ?? 14);
-
-      for (let i = 1; i <= 8; i++) {
-        styleButton(getSubButton(i), {
-          background: inactiveBg,
-          icon: inactiveIcon,
-          text: inactiveText,
-          opacity: inactiveOpacity
-        });
+      const knownTargets = new Set();
+      knownTargets.add(Number(config.off_target ?? 1));
+      speeds.forEach((s) => { const n = getSpeedButtonNumber(s); if (n) knownTargets.add(n); });
+      if (config.enable_direction === true) knownTargets.add(Number(config.direction_sub_button_index ?? 5));
+      if (config.enable_presets === true && Array.isArray(config.preset_mappings)) {
+        config.preset_mappings.forEach((p) => { if (Number(p?.sub_button_index)) knownTargets.add(Number(p.sub_button_index)); });
       }
 
-      const activeButton = getSubButton(target);
-      if (activeButton) {
-        const glow = glowEnabled && activeGlow && glowSize > 0
-          ? `0 0 ${glowSize}px ${activeGlow}`
-          : "none";
+      const buttonsToReset = config.clear_all_sub_buttons === true
+        ? Array.from(card.querySelectorAll(".bubble-sub-button"))
+        : Array.from(knownTargets).map(getSubButton).filter(Boolean);
+      buttonsToReset.forEach((button) => styleButton(button, { background: inactiveBg, icon: inactiveIcon, text: inactiveText, opacity: inactiveOpacity }));
 
+      const styleActiveButton = (button, prefix, overrides = {}) => {
+        if (!button) return;
+        const bg = overrides.bg || color(`${prefix}_button_bg`, {
+          off: "rgba(255,255,255,0.22)", low: "rgba(76,175,80,0.25)", medium: "rgba(255,193,7,0.25)", high: "rgba(244,67,54,0.25)"
+        }[prefix] || "rgba(255,255,255,0.22)", { activeSpeed, styleKey: prefix });
+        const icon = overrides.icon || color(`${prefix}_button_icon`, "", { activeSpeed, styleKey: prefix });
+        const text = overrides.text || color(`${prefix}_button_text`, "", { activeSpeed, styleKey: prefix });
+        const glowColor = overrides.glow || color(`${prefix}_glow`, {
+          off: "rgba(255,255,255,0.55)", low: "rgba(76,175,80,0.85)", medium: "rgba(255,193,7,0.85)", high: "rgba(244,67,54,0.9)"
+        }[prefix] || "", { activeSpeed, styleKey: prefix });
+        const glowEnabled = overrides.glowEnabled !== undefined ? overrides.glowEnabled !== false : config[`${prefix}_glow_enabled`] !== false;
+        const glowSize = Number(overrides.glowSize ?? config[`${prefix}_glow_size`] ?? 14);
+        const glow = glowEnabled && glowColor && glowSize > 0 ? `0 0 ${glowSize}px ${glowColor}` : "none";
         if (glow !== "none") card.classList.add("fan-enable-glow");
+        styleButton(button, { background: bg, icon: icon || inactiveIcon, text: text || inactiveText, opacity: 1, glow });
+      };
 
-        styleButton(activeButton, {
-          background: activeButtonBg,
-          icon: activeButtonIcon || inactiveIcon,
-          text: activeButtonText || inactiveText,
-          opacity: 1,
-          glow
+      setVar("--fan-card-background", color(`${activeStyleKey}_card`, "", { activeSpeed, styleKey: activeStyleKey }));
+      setVar("--fan-icon-background", color(`${activeStyleKey}_icon_bg`, "", { activeSpeed, styleKey: activeStyleKey }));
+      setVar("--fan-icon-color", color(`${activeStyleKey}_icon`, "", { activeSpeed, styleKey: activeStyleKey }));
+
+      const offButton = getSubButton(Number(config.off_target ?? 1));
+      const powerMode = config.power_button_mode || "off_only";
+      const powerIcon = powerMode === "toggle"
+        ? (fanOff ? (config.power_button_on_icon || "mdi:power-on") : (config.power_button_off_icon || config.off_button_icon || "mdi:power"))
+        : (config.off_button_icon || config.power_button_off_icon || "mdi:power");
+      setIconInButton(offButton, powerIcon);
+      attachAction(offButton, () => {
+        if (config.off_action_enabled === false) return;
+        if (powerMode === "toggle" && fanOff) callFanService("turn_on");
+        else callFanService("turn_off");
+      });
+      if (fanOff) styleActiveButton(offButton, "off");
+
+      speeds.forEach((s) => {
+        const btn = getSubButton(getSpeedButtonNumber(s));
+        setIconInButton(btn, s.icon);
+        attachAction(btn, () => { if (s.action_enabled !== false) callFanService("set_percentage", { percentage: s.value }); });
+        if (!presetMatch && activeSpeed && s === activeSpeed) {
+          const key = getStyleKeyForSpeed(s);
+          styleActiveButton(btn, key, {
+            bg: String(s.button_bg_override || "").trim(),
+            icon: String(s.button_icon_override || "").trim(),
+            text: String(s.button_text_override || "").trim(),
+            glow: String(s.glow_override || "").trim(),
+          });
+        }
+      });
+
+      const currentDirection = String(fan?.attributes?.[config.direction_attribute || "direction"] || "");
+      const forwardValue = String(config.forward_value || "forward");
+      const reverseValue = String(config.reverse_value || "reverse");
+      const shouldHighlightDirection = () => {
+        if (config.enable_direction !== true || config.highlight_direction_button === false) return false;
+        const mode = config.direction_button_highlight_mode || "always";
+        if (mode === "never") return false;
+        if (mode === "reverse_only") return currentDirection === reverseValue;
+        return true;
+      };
+      if (config.enable_direction === true) {
+        const directionButton = getSubButton(Number(config.direction_sub_button_index ?? 5));
+        const dirIcon = config.direction_button_icon || (currentDirection === reverseValue ? (config.reverse_icon || "mdi:keyboard-tab-reverse") : (config.forward_icon || "mdi:fast-forward")) || "mdi:swap-horizontal";
+        setIconInButton(directionButton, dirIcon);
+        attachAction(directionButton, () => {
+          if (config.direction_action_enabled === false) return;
+          const next = currentDirection === forwardValue ? reverseValue : forwardValue;
+          callFanService("set_direction", { direction: next });
+        });
+        if (shouldHighlightDirection()) styleActiveButton(directionButton, activeSpeed ? activeStyleKey : "off");
+      }
+
+      if (config.enable_presets === true && Array.isArray(config.preset_mappings)) {
+        config.preset_mappings.forEach((preset) => {
+          const btn = getSubButton(Number(preset?.sub_button_index));
+          if (!btn) return;
+          if (preset.icon) setIconInButton(btn, preset.icon);
+          attachAction(btn, () => {
+            if (preset.action_enabled === false || !preset.preset_value) return;
+            const setPresetMode = () => callFanService("set_preset_mode", { preset_mode: preset.preset_value });
+            const shouldTurnOnFirst = config.preset_turn_on_first !== false && fanOff;
+            if (shouldTurnOnFirst) {
+              callFanService("turn_on");
+              const delay = Math.max(0, Number(config.preset_set_delay_ms ?? 350));
+              window.setTimeout(setPresetMode, delay);
+            } else {
+              setPresetMode();
+            }
+          });
+          if (preset.preset_value && String(preset.preset_value) === currentPreset) {
+            const presetStyleKey = normalizeStyleKey(preset.style_preset) || activeStyleKey || "low";
+            styleActiveButton(btn, presetStyleKey, {
+              bg: objectColor(preset, "button_bg", ""),
+              icon: objectColor(preset, "button_icon", ""),
+              text: objectColor(preset, "button_text", ""),
+              glow: objectColor(preset, "glow", ""),
+              glowEnabled: preset.glow_enabled,
+              glowSize: preset.glow_size,
+            });
+          }
         });
       }
 
-      const baseIcon = this.config.icon || "mdi:fan";
-      const offIcon = config.off_icon || "mdi:fan-off";
+      // Main icon handling is intentionally conservative.
+      // Bubble Card owns the configured card name/icon. This module must not
+      // overwrite those values unless the user explicitly chooses an override mode.
+      const mainBehavior = ({ active_speed: "active_speed_icon", on_off: "on_off_icon", card_icon: "keep_card_icon" }[config.main_icon_mode] || config.main_icon_behavior || "keep_card_icon");
+      const mainOffIcon = config.main_off_icon || config.off_icon || "mdi:fan-off";
+      const mainOnIcon = config.main_on_icon || "mdi:fan";
+      const presetMainIcon = (presetMatch && config.preset_icon_overrides_main === true)
+        ? (presetMatch.main_icon || presetMatch.icon || "")
+        : "";
 
-      if (config.enable_off_icon !== false && !isOn) {
-        setMainIcon(offIcon);
-        requestAnimationFrame(() => setMainIcon(offIcon));
-      } else {
-        setMainIcon(baseIcon);
+      if (presetMatch && presetMainIcon) {
+        setMainIcon(presetMainIcon);
+      } else if (mainBehavior === "active_speed_icon" && fanOff && config.enable_off_icon !== false) {
+        setMainIcon(mainOffIcon);
+        requestAnimationFrame(() => setMainIcon(mainOffIcon));
+      } else if (mainBehavior === "active_speed_icon" && activeSpeed?.icon) {
+        setMainIcon(activeSpeed.icon);
+      } else if (mainBehavior === "on_off_icon") {
+        const nextMainIcon = fanOff && config.enable_off_icon !== false ? mainOffIcon : mainOnIcon;
+        setMainIcon(nextMainIcon);
+        if (fanOff) requestAnimationFrame(() => setMainIcon(nextMainIcon));
       }
+      // keep_card_icon: do nothing. Leave Bubble Card's selected icon alone.
 
-      if (config.enable_spin_animation !== false && isOn) {
-        let spinSeconds = Number(config.low_spin_seconds ?? 2.4);
-        if (speed === "medium") spinSeconds = Number(config.medium_spin_seconds ?? 1.4);
-        if (speed === "high") spinSeconds = Number(config.high_spin_seconds ?? 0.7);
+      const presetAnimationMode = presetMatch ? String(presetMatch.animation_mode || "spin") : "";
+      const presetAnimationSeconds = Number(presetMatch?.spin_seconds ?? config.default_spin_seconds ?? 1.8);
+      const speedShouldSpin = activeSpeed && activeSpeed.animate_icon !== false;
+      const presetShouldAnimate = presetMatch && presetAnimationMode !== "none";
+      const shouldAnimateMainIcon = config.enable_spin_animation !== false && !fanOff && (speedShouldSpin || presetShouldAnimate);
 
-        card.style.setProperty("--fan-spin-speed", `${spinSeconds}s`);
-        card.classList.add("fan-spin-enabled");
+      if (shouldAnimateMainIcon) {
+        if (presetShouldAnimate) {
+          card.style.setProperty("--fan-spin-speed", `${presetAnimationSeconds}s`);
+          if (presetAnimationMode === "pulse") {
+            card.classList.add("fan-preset-pulse");
+          } else if (presetAnimationMode === "wobble") {
+            card.classList.add("fan-preset-wobble");
+          } else if (presetAnimationMode === "breeze") {
+            card.classList.add("fan-preset-breeze");
+          } else {
+            card.classList.add("fan-spin-enabled");
+            if (presetAnimationMode === "reverse_spin") card.classList.add("fan-spin-reverse");
+          }
+        } else {
+          const spinSeconds = Number(activeSpeed?.spin_seconds ?? config.default_spin_seconds ?? 1.4);
+          card.style.setProperty("--fan-spin-speed", `${spinSeconds}s`);
+          card.classList.add("fan-spin-enabled");
+          if (config.reverse_direction_animation === true && currentDirection === reverseValue) card.classList.add("fan-spin-reverse");
+        }
       } else {
         card.style.removeProperty("--fan-spin-speed");
       }
@@ -1885,13 +2681,152 @@ fan_speed_visual_center:
       color: var(--fan-sub-button-text-color, var(--fan-inactive-subbutton-text-color, inherit)) !important;
     }
 
+    .fan-layout-control-row .bubble-sub-button-container,
+    .fan-layout-control-row .bubble-sub-button-row,
+    .fan-layout-control-row .bubble-sub-buttons-container {
+      display: flex !important;
+      gap: var(--fan-sub-button-gap, 6px) !important;
+      overflow-x: auto !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+    }
+
+    .fan-layout-control-row .bubble-sub-button {
+      flex: 0 0 auto !important;
+      min-width: var(--fan-sub-button-min-width, 48px) !important;
+    }
+
+    .fan-layout-compact-fill-row .bubble-sub-button-container,
+    .fan-layout-compact-fill-row .bubble-sub-button-row,
+    .fan-layout-compact-fill-row .bubble-sub-buttons-container {
+      width: 100% !important;
+      max-width: 100% !important;
+      display: flex !important;
+      justify-content: var(--fan-sub-button-justify, space-between) !important;
+      gap: var(--fan-sub-button-gap, 6px) !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      overflow: visible !important;
+      box-sizing: border-box !important;
+    }
+
+    .fan-layout-compact-fill-row .bubble-sub-button {
+      flex: 0 1 var(--fan-sub-button-max-width, 68px) !important;
+      width: var(--fan-sub-button-max-width, 68px) !important;
+      max-width: var(--fan-sub-button-max-width, 68px) !important;
+      min-width: var(--fan-sub-button-min-width, 42px) !important;
+      box-sizing: border-box !important;
+    }
+
+    .fan-layout-compact-fill-row .bubble-sub-button .bubble-sub-button-name,
+    .fan-layout-compact-fill-row .bubble-sub-button .bubble-sub-button-name-container,
+    .fan-layout-compact-fill-row .bubble-sub-button span,
+    .fan-layout-compact-fill-row .bubble-sub-button p {
+      max-width: 100% !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+
+    .fan-layout-bottom-control-row .bubble-button-card-container {
+      position: relative !important;
+      min-height: 96px !important;
+      padding-bottom: 48px !important;
+      box-sizing: border-box !important;
+    }
+
+    .fan-layout-bottom-control-row .bubble-sub-button-container,
+    .fan-layout-bottom-control-row .bubble-sub-button-row,
+    .fan-layout-bottom-control-row .bubble-sub-buttons-container {
+      position: absolute !important;
+      left: 12px !important;
+      right: 12px !important;
+      bottom: 8px !important;
+      width: auto !important;
+      max-width: none !important;
+      display: flex !important;
+      justify-content: var(--fan-sub-button-justify, space-between) !important;
+      gap: var(--fan-sub-button-gap, 6px) !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      overflow: visible !important;
+      box-sizing: border-box !important;
+      z-index: 2 !important;
+    }
+
+    .fan-layout-bottom-control-row .bubble-sub-button {
+      flex: 1 1 0 !important;
+      min-width: var(--fan-sub-button-min-width, 48px) !important;
+      max-width: var(--fan-sub-button-max-width, 82px) !important;
+      width: auto !important;
+      box-sizing: border-box !important;
+    }
+
+    .fan-layout-bottom-control-row .bubble-sub-button .bubble-sub-button-name,
+    .fan-layout-bottom-control-row .bubble-sub-button .bubble-sub-button-name-container,
+    .fan-layout-bottom-control-row .bubble-sub-button span,
+    .fan-layout-bottom-control-row .bubble-sub-button p {
+      max-width: 100% !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    .fan-hide-main-name-state .bubble-name,
+    .fan-hide-main-name-state .bubble-state,
+    .fan-hide-main-name-state .bubble-name-container {
+      display: none !important;
+    }
+
     @keyframes fan-speed-visual-spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
 
+    @keyframes fan-speed-visual-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.12); opacity: 0.82; }
+    }
+
+    @keyframes fan-speed-visual-wobble {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+
+    @keyframes fan-speed-visual-breeze {
+      0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+      25% { transform: translateX(-2px) rotate(-6deg) scale(1.03); }
+      50% { transform: translateX(2px) rotate(6deg) scale(0.98); }
+      75% { transform: translateX(-1px) rotate(-3deg) scale(1.02); }
+    }
+
     .fan-spin-enabled .bubble-icon,
     .fan-spin-enabled .bubble-icon-container ha-icon {
       animation: fan-speed-visual-spin var(--fan-spin-speed, 1.5s) linear infinite !important;
+      transform-origin: center center !important;
+    }
+
+    .fan-spin-enabled.fan-spin-reverse .bubble-icon,
+    .fan-spin-enabled.fan-spin-reverse .bubble-icon-container ha-icon {
+      animation-direction: reverse !important;
+    }
+
+    .fan-preset-pulse .bubble-icon,
+    .fan-preset-pulse .bubble-icon-container ha-icon {
+      animation: fan-speed-visual-pulse var(--fan-spin-speed, 1.8s) ease-in-out infinite !important;
+      transform-origin: center center !important;
+    }
+
+    .fan-preset-wobble .bubble-icon,
+    .fan-preset-wobble .bubble-icon-container ha-icon {
+      animation: fan-speed-visual-wobble var(--fan-spin-speed, 1.8s) ease-in-out infinite !important;
+      transform-origin: center center !important;
+    }
+
+    .fan-preset-breeze .bubble-icon,
+    .fan-preset-breeze .bubble-icon-container ha-icon {
+      animation: fan-speed-visual-breeze var(--fan-spin-speed, 2.8s) ease-in-out infinite !important;
       transform-origin: center center !important;
     }
