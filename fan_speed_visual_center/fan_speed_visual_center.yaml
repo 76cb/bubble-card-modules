@@ -1,31 +1,47 @@
 fan_speed_visual_center:
   name: "Fan Speed Visual Center"
-  version: "v1.2.0"
+  version: "v1.3.0"
   creator: "76cb"
   link: "https://github.com/76cb/bubble-card-modules/tree/main/fan_speed_visual_center"
   supported:
     - button
   description: >
-    Advanced Bubble Card module for Home Assistant fan controls. Uses normal
-    Bubble Card sub-buttons for Off/Power, user-defined speed percentages,
-    optional direction, optional presets, scalable button mapping, per-speed
-    animation, and full active/inactive/off styling. Off is configured
-    separately and should not be added to the speeds list.
+    Advanced Bubble Card module for Home Assistant fan and climate fan controls.
+    Uses normal Bubble Card sub-buttons for Off/Power, fan speed percentages,
+    climate fan modes, fan/climate presets, select and input_select options,
+    optional direction, scalable button mapping, animation, and theme-aware
+    active/inactive/off styling. Off is configured separately.
 
   editor:
     - type: expandable
-      title: "Fan Entity"
+      title: "Control Entity"
       icon: "mdi:fan"
       schema:
         - type: grid
           column_min_width: "220px"
           schema:
             - name: fan_entity
-              label: "Fan Entity"
+              label: "Fan or Climate Entity"
+              description: "Primary entity controlled by the power button and main icon. The existing fan_entity key is retained for backward compatibility."
               selector:
                 entity:
                   filter:
-                    domain: fan
+                    - domain: fan
+                    - domain: climate
+            - name: control_mode
+              label: "Primary Speed Control"
+              description: "Auto uses percentage controls for fan entities and Mode / Select Buttons for climate fan modes."
+              default: "auto"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Auto"
+                      value: "auto"
+                    - label: "Fan percentage"
+                      value: "percentage"
+                    - label: "Climate fan mode"
+                      value: "climate_fan_mode"
 
     - type: expandable
       title: "Button Mapping"
@@ -141,7 +157,7 @@ fan_speed_visual_center:
       schema:
         - name: speeds
           label: "Speed Buttons"
-          description: "Only add actual fan speed percentages here. Do not add Off. Off / Power is configured separately in the Off / Power Button section. Supports 2 to 10 speed buttons."
+          description: "Percentage buttons for fan entities. Do not add Off. Climate fan modes and dropdown/select options belong in Mode / Select Buttons. Supports 2 to 10 speed buttons."
           selector:
             object:
               multiple: true
@@ -254,6 +270,24 @@ fan_speed_visual_center:
                       value: "active_speed_icon"
                     - label: "On/Off icons"
                       value: "on_off_icon"
+            - name: main_icon_action
+              label: "Main Icon Tap Action"
+              description: "Use the main icon container as the power control, or leave Bubble Card's configured icon action unchanged."
+              default: "bubble_default"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Use Bubble Card action"
+                      value: "bubble_default"
+                    - label: "Toggle on/off"
+                      value: "toggle"
+                    - label: "Turn on"
+                      value: "turn_on"
+                    - label: "Turn off"
+                      value: "turn_off"
+                    - label: "No action"
+                      value: "none"
             - name: main_on_icon
               label: "Main On Icon"
               default: "mdi:fan"
@@ -345,13 +379,15 @@ fan_speed_visual_center:
           schema:
             - name: inactive_background_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -370,13 +406,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: inactive_icon_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -396,13 +434,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: inactive_text_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -421,8 +461,20 @@ fan_speed_visual_center:
                   include_none: true
                   include_state: true
 
-            - name: inactive_opacity
+            - name: inactive_opacity_mode
               label: "Inactive Opacity"
+              description: "Use Bubble Card / theme leaves the existing opacity untouched."
+              default: "inherit"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
+                    - label: "Custom opacity"
+                      value: "custom"
+            - name: inactive_opacity
+              label: "Custom Inactive Opacity"
               default: 65
               selector:
                 number:
@@ -523,13 +575,15 @@ fan_speed_visual_center:
           schema:
             - name: off_card_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -548,13 +602,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: off_icon_bg_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -574,13 +630,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: off_icon_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -607,6 +665,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -633,6 +693,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -659,6 +721,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -685,6 +749,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -845,13 +911,15 @@ fan_speed_visual_center:
           schema:
             - name: low_card_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -870,13 +938,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: low_icon_bg_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -896,13 +966,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: low_icon_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -929,6 +1001,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -955,6 +1029,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -981,6 +1057,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1007,6 +1085,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1167,13 +1247,15 @@ fan_speed_visual_center:
           schema:
             - name: medium_card_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1192,13 +1274,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: medium_icon_bg_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1218,13 +1302,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: medium_icon_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1251,6 +1337,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1277,6 +1365,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1303,6 +1393,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1329,6 +1421,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1489,13 +1583,15 @@ fan_speed_visual_center:
           schema:
             - name: high_card_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1514,13 +1610,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: high_icon_bg_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1540,13 +1638,15 @@ fan_speed_visual_center:
                   include_state: true
             - name: high_icon_mode
               label: "Color mode"
-              default: "preset"
+              default: "inherit"
               selector:
                 select:
                   mode: dropdown
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1573,6 +1673,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1599,6 +1701,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1625,6 +1729,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1651,6 +1757,8 @@ fan_speed_visual_center:
                   multiple: false
                   custom_value: false
                   options:
+                    - label: "Use Bubble Card / theme"
+                      value: "inherit"
                     - label: "Preset color"
                       value: "preset"
                     - label: "Color wheel"
@@ -1863,19 +1971,20 @@ fan_speed_visual_center:
                 icon: {}
 
     - type: expandable
-      title: "Presets"
+      title: "Mode / Select Buttons"
       icon: "mdi:tune-variant"
       schema:
         - type: grid
           column_min_width: "220px"
           schema:
             - name: enable_presets
-              label: "Enable Preset Buttons"
+              label: "Enable Mode / Select Buttons"
               default: false
               selector:
                 boolean: {}
             - name: preset_attribute
-              label: "Preset Attribute"
+              label: "Default Active Attribute"
+              description: "Legacy/default attribute for fan preset mappings. Individual mappings can override this. Use state for entity-state matching."
               default: "preset_mode"
               selector:
                 text: {}
@@ -1897,24 +2006,70 @@ fan_speed_visual_center:
                   mode: slider
                   unit_of_measurement: "ms"
         - name: preset_mappings
-          label: "Preset Buttons"
-          description: "Optional fan preset buttons. Each preset maps to an existing Bubble Card sub-button."
+          label: "Mode / Select Buttons"
+          description: "Map fan presets, climate fan modes/presets, select entities, or input_select helpers to existing Bubble Card sub-buttons."
           selector:
             object:
               multiple: true
               label_field: label
               fields:
                 label:
-                  label: "Preset Label"
+                  label: "Button Label"
                   selector:
                     text: {}
                 preset_value:
-                  label: "Preset Value"
+                  label: "Mode / Option Value"
                   selector:
                     text: {}
+                target_entity:
+                  label: "Target Entity"
+                  description: "Optional. Defaults to the primary Fan or Climate Entity. Supports fan, climate, select, and input_select entities."
+                  selector:
+                    entity:
+                      filter:
+                        - domain: fan
+                        - domain: climate
+                        - domain: select
+                        - domain: input_select
+                action_type:
+                  label: "Action Type"
+                  description: "Auto chooses the action from the target entity domain."
+                  default: "auto"
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Auto"
+                          value: "auto"
+                        - label: "Fan preset mode"
+                          value: "fan_preset"
+                        - label: "Climate fan mode"
+                          value: "climate_fan_mode"
+                        - label: "Climate preset mode"
+                          value: "climate_preset"
+                        - label: "Select option"
+                          value: "select_option"
+                        - label: "Input select option"
+                          value: "input_select_option"
+                active_attribute:
+                  label: "Active Attribute"
+                  description: "Optional. Auto uses preset_mode, fan_mode, or state based on Action Type. Enter state to compare the entity state directly."
+                  selector:
+                    text: {}
+                affect_main_card:
+                  label: "Affect Main Card Style / Icon"
+                  description: "When active, this mapping may control the main card style, icon, and animation. The first active enabled mapping wins."
+                  default: true
+                  selector:
+                    boolean: {}
+                turn_on_first:
+                  label: "Turn Target On First"
+                  description: "Optional per-button override. Applies only to fan and climate targets."
+                  selector:
+                    boolean: {}
                 icon:
-                  label: "Preset Button Icon"
-                  description: "Icon used on the preset sub-button."
+                  label: "Button Icon"
+                  description: "Icon used on the mapped sub-button."
                   selector:
                     icon: {}
                 main_icon:
@@ -1984,6 +2139,8 @@ fan_speed_visual_center:
                       options:
                         - label: "Use Style Preset"
                           value: "style_preset"
+                        - label: "Use Bubble Card / theme"
+                          value: "inherit"
                         - label: "Preset color"
                           value: "preset"
                         - label: "Color wheel"
@@ -2023,6 +2180,8 @@ fan_speed_visual_center:
                       options:
                         - label: "Use Style Preset"
                           value: "style_preset"
+                        - label: "Use Bubble Card / theme"
+                          value: "inherit"
                         - label: "Preset color"
                           value: "preset"
                         - label: "Color wheel"
@@ -2061,6 +2220,8 @@ fan_speed_visual_center:
                       options:
                         - label: "Use Style Preset"
                           value: "style_preset"
+                        - label: "Use Bubble Card / theme"
+                          value: "inherit"
                         - label: "Preset color"
                           value: "preset"
                         - label: "Color wheel"
@@ -2099,6 +2260,8 @@ fan_speed_visual_center:
                       options:
                         - label: "Use Style Preset"
                           value: "style_preset"
+                        - label: "Use Bubble Card / theme"
+                          value: "inherit"
                         - label: "Preset color"
                           value: "preset"
                         - label: "Color wheel"
@@ -2128,12 +2291,12 @@ fan_speed_visual_center:
                     text:
                       multiline: true
                 glow_enabled:
-                  label: "Enable Preset Glow"
+                  label: "Enable Button Glow"
                   default: true
                   selector:
                     boolean: {}
                 glow_size:
-                  label: "Preset Glow Size"
+                  label: "Button Glow Size"
                   default: 14
                   selector:
                     number:
@@ -2164,12 +2327,18 @@ fan_speed_visual_center:
   code: |
     ${(() => {
       const config = this.config.fan_speed_visual_center || {};
+      // fan_entity is retained as the configuration key for backward compatibility,
+      // but it may now reference either a fan or climate entity.
       const fanEntity = config.fan_entity || this.config.entity;
       const fan = fanEntity ? hass.states[fanEntity] : null;
+      const controlDomain = String(fanEntity || "").split(".")[0];
+      const controlMode = config.control_mode || "auto";
 
       const state = fan?.state || "off";
       const pct = Number(fan?.attributes?.percentage || 0);
-      const isOn = state === "on";
+      const hardOffStates = ["off", "unavailable", "unknown"];
+      const baseIsOn = !!fan && !hardOffStates.includes(state);
+      const percentageControlsEnabled = controlMode === "percentage" || (controlMode === "auto" && controlDomain === "fan");
       const debug = (...args) => { if (config.debug) console.debug("[fan_speed_visual_center]", ...args); };
 
       const clampNumber = (value, min, max) => {
@@ -2209,8 +2378,9 @@ fan_speed_visual_center:
         }
       };
 
-      const color = (base, fallback = "", extra = {}) => {
-        const mode = config[`${base}_mode`] || "preset";
+      const color = (base, fallback = "", extra = {}, defaultMode = "preset") => {
+        const mode = config[`${base}_mode`] || defaultMode;
+        if (mode === "inherit") return fallback;
         if (mode === "manual") return String(config[`${base}_manual`] || "").trim() || fallback;
         if (mode === "wheel") return rgbToCss(config[`${base}_wheel`]) || fallback;
         if (mode === "template") return String(templateToCss(config[`${base}_template`], extra)).trim() || fallback;
@@ -2219,11 +2389,12 @@ fan_speed_visual_center:
 
       const objectTemplateToCss = (template, preset = {}) => {
         if (!template) return "";
+        const mappingCurrentValue = getPresetContext(preset).currentValue;
         try {
-          return Function("hass", "entity", "state", "pct", "preset", "currentPreset", `return (${template});`)(hass, fan, state, pct, preset, currentPreset) || "";
+          return Function("hass", "entity", "state", "pct", "preset", "currentPreset", `return (${template});`)(hass, fan, state, pct, preset, mappingCurrentValue) || "";
         } catch (e) {
           try {
-            return Function("hass", "entity", "state", "pct", "preset", "currentPreset", template)(hass, fan, state, pct, preset, currentPreset) || "";
+            return Function("hass", "entity", "state", "pct", "preset", "currentPreset", template)(hass, fan, state, pct, preset, mappingCurrentValue) || "";
           } catch (err) {
             debug("Preset template color failed", err);
             return "";
@@ -2243,7 +2414,7 @@ fan_speed_visual_center:
         if (legacyKey && obj[legacyKey]) return String(obj[legacyKey]).trim() || fallback;
 
         const mode = obj[`${base}_mode`] || "style_preset";
-        if (mode === "style_preset") return fallback;
+        if (mode === "style_preset" || mode === "inherit") return fallback;
         if (mode === "preset") return themeToCss(obj[`${base}_theme`]) || fallback;
         if (mode === "manual") return String(obj[`${base}_manual`] || "").trim() || fallback;
         if (mode === "wheel") return rgbToCss(obj[`${base}_wheel`]) || fallback;
@@ -2254,6 +2425,11 @@ fan_speed_visual_center:
       const setVar = (name, value) => {
         if (value) card.style.setProperty(name, value);
         else card.style.removeProperty(name);
+      };
+
+      const setScopedVar = (name, value, className) => {
+        setVar(name, value);
+        card.classList.toggle(className, !!value);
       };
 
       const getConfiguredSpeeds = () => {
@@ -2276,9 +2452,10 @@ fan_speed_visual_center:
           });
         });
 
-        if (speeds.length > 0) return speeds.slice(0, 10).sort((a, b) => a.value - b.value);
+        if (speeds.length > 0) return percentageControlsEnabled ? speeds.slice(0, 10).sort((a, b) => a.value - b.value) : [];
+        if (!percentageControlsEnabled) return [];
 
-        // Backward-compatible fallback for the original 3-speed config.
+        // Backward-compatible fallback for the original 3-speed fan config.
         const lowMax = Number(config.low_max ?? 40);
         const mediumMax = Number(config.medium_max ?? 80);
         return [
@@ -2298,33 +2475,60 @@ fan_speed_visual_center:
         return "";
       };
 
-      const getPresetValue = () => {
-        if (!fan) return "";
-        const attrName = config.preset_attribute || "preset_mode";
-        if (attrName === "state") return String(fan.state || "");
-        const attrValue = fan.attributes?.[attrName];
-        if (attrValue !== undefined && attrValue !== null && String(attrValue) !== "") return String(attrValue);
-        if (config.enable_presets === true && Array.isArray(config.preset_mappings)) {
-          const stateValue = String(fan.state || "");
-          const stateMatchesPreset = config.preset_mappings.some((preset) => preset?.preset_value && String(preset.preset_value) === stateValue);
-          if (stateMatchesPreset) return stateValue;
+      const presetMappings = config.enable_presets === true && Array.isArray(config.preset_mappings)
+        ? config.preset_mappings.filter((mapping) => mapping && mapping.preset_value !== undefined && mapping.preset_value !== null)
+        : [];
+
+      const inferMappingActionType = (mapping, targetEntity) => {
+        const explicit = String(mapping?.action_type || "auto");
+        if (explicit !== "auto") return explicit;
+        const domain = String(targetEntity || "").split(".")[0];
+        if (domain === "climate") return "climate_fan_mode";
+        if (domain === "select") return "select_option";
+        if (domain === "input_select") return "input_select_option";
+        return "fan_preset";
+      };
+
+      const defaultActiveAttribute = (mapping, actionType) => {
+        const configured = String(mapping?.active_attribute || "").trim();
+        if (configured) return configured;
+        if (actionType === "climate_fan_mode") return "fan_mode";
+        if (actionType === "climate_preset" || actionType === "fan_preset") {
+          return String(config.preset_attribute || "preset_mode");
         }
-        return "";
+        return "state";
       };
 
-      const getPresetMatch = (presetValue) => {
-        if (config.enable_presets !== true || !Array.isArray(config.preset_mappings) || !presetValue) return null;
-        return config.preset_mappings.find((preset) => preset?.preset_value && String(preset.preset_value) === String(presetValue)) || null;
+      const getPresetContext = (mapping) => {
+        const targetEntity = mapping?.target_entity || fanEntity;
+        const target = targetEntity ? hass.states[targetEntity] : null;
+        const actionType = inferMappingActionType(mapping, targetEntity);
+        const activeAttribute = defaultActiveAttribute(mapping, actionType);
+        const currentValue = activeAttribute === "state"
+          ? String(target?.state || "")
+          : String(target?.attributes?.[activeAttribute] ?? "");
+        return { targetEntity, target, actionType, activeAttribute, currentValue };
       };
 
-      const currentPreset = getPresetValue();
-      const presetMatch = getPresetMatch(currentPreset);
+      const isPresetActive = (mapping) => {
+        if (!mapping || mapping.preset_value === undefined || mapping.preset_value === null) return false;
+        const { currentValue } = getPresetContext(mapping);
+        return currentValue === String(mapping.preset_value);
+      };
+
+      const activePresetMappings = presetMappings.filter(isPresetActive);
+      const controlPresetMatch = activePresetMappings.find((mapping) => {
+        const ctx = getPresetContext(mapping);
+        return ctx.targetEntity === fanEntity && ["fan_preset", "climate_fan_mode", "climate_preset"].includes(ctx.actionType);
+      }) || null;
+      const presetMatch = activePresetMappings.find((mapping) => mapping.affect_main_card !== false) || controlPresetMatch || null;
+      const currentPreset = presetMatch ? getPresetContext(presetMatch).currentValue : "";
 
       const getActiveSpeed = () => {
         // Presets like Inovelli Smart/Breeze are exclusive active modes.
         // Do not also highlight a normal percentage speed while a configured preset is active.
-        if (presetMatch) return null;
-        if (!isOn || pct <= 0 || speeds.length === 0) return null;
+        if (controlPresetMatch) return null;
+        if (!baseIsOn || pct <= 0 || speeds.length === 0) return null;
         return speeds.reduce((best, s) => {
           if (!best) return s;
           const d = Math.abs(s.value - pct);
@@ -2347,14 +2551,16 @@ fan_speed_visual_center:
         return "high";
       };
 
-      const activeStyleKey = presetMatch
-        ? (normalizeStyleKey(presetMatch.style_preset) || "medium")
-        : (activeSpeed ? getStyleKeyForSpeed(activeSpeed) : "off");
-
-      // Preset modes such as Inovelli Smart/Breeze may report percentage as 0 or omit percentage.
-      // A configured matching preset is an active fan mode and must not be styled as Off.
-      const hardOffStates = ["off", "unavailable", "unknown"];
-      const fanOff = hardOffStates.includes(state) && !presetMatch;
+      // A primary fan/climate mode mapping can keep the control visually active even
+      // when that integration reports an off-like state while changing modes. External
+      // select mappings never force the primary device on.
+      const presetKeepsControlActive = !!controlPresetMatch && controlPresetMatch.treat_as_active !== false;
+      const fanOff = hardOffStates.includes(state) && !presetKeepsControlActive;
+      const activeStyleKey = fanOff
+        ? "off"
+        : (presetMatch
+          ? (normalizeStyleKey(presetMatch.style_preset) || "medium")
+          : (activeSpeed ? getStyleKeyForSpeed(activeSpeed) : "low"));
 
       const findMainIcon = () => card.querySelector(".bubble-icon") || card.querySelector(".bubble-icon-container ha-icon") || card.querySelector("ha-icon.bubble-icon");
       const setMainIcon = (iconName) => {
@@ -2415,7 +2621,8 @@ fan_speed_visual_center:
         }
         if (opacity !== "") button.style.setProperty("opacity", String(opacity), "important");
         else button.style.removeProperty("opacity");
-        button.style.setProperty("box-shadow", glow || "none", "important");
+        if (glow !== "") button.style.setProperty("box-shadow", glow || "none", "important");
+        else button.style.removeProperty("box-shadow");
         if (icon) button.style.setProperty("--fan-sub-button-icon-color", icon);
         else button.style.removeProperty("--fan-sub-button-icon-color");
         if (text) {
@@ -2431,8 +2638,21 @@ fan_speed_visual_center:
         setColorOnElements(button.querySelectorAll(".bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, span, p"), text);
       };
 
-      const attachAction = (button, fn) => {
+      const detachAction = (button) => {
+        if (!button || button.dataset?.fanSpeedVisualAction !== "true") return;
+        button.onclick = button.__fanSpeedVisualPreviousOnclick || null;
+        delete button.__fanSpeedVisualPreviousOnclick;
+        delete button.dataset.fanSpeedVisualAction;
+        button.style.removeProperty("cursor");
+      };
+
+      const attachAction = (button, fn, enabled = true) => {
         if (!button) return;
+        detachAction(button);
+        if (!enabled) return;
+        button.__fanSpeedVisualPreviousOnclick = button.onclick || null;
+        button.dataset.fanSpeedVisualAction = "true";
+        button.style.setProperty("cursor", "pointer");
         button.onclick = (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
@@ -2440,20 +2660,66 @@ fan_speed_visual_center:
         };
       };
 
-      const callFanService = (service, data = {}) => {
-        if (!fanEntity || !hass?.callService) {
-          debug("Skipping service call; missing fan entity or hass.callService", service, data);
+      const callEntityService = (domain, service, entityId, data = {}) => {
+        if (!domain || !service || !entityId || !hass?.callService) {
+          debug("Skipping service call; missing domain, service, entity, or hass.callService", domain, service, entityId, data);
           return;
         }
-        hass.callService("fan", service, { entity_id: fanEntity, ...data });
+        hass.callService(domain, service, { entity_id: entityId, ...data });
+      };
+
+      const callControlService = (service, data = {}) => {
+        const domain = ["fan", "climate"].includes(controlDomain) ? controlDomain : "homeassistant";
+        callEntityService(domain, service, fanEntity, data);
+      };
+
+      const callFanService = (service, data = {}) => {
+        if (controlDomain !== "fan") {
+          debug(`Ignoring fan.${service}; primary entity is ${controlDomain || "unknown"}.`);
+          return;
+        }
+        callEntityService("fan", service, fanEntity, data);
+      };
+
+      const callMappedAction = (mapping) => {
+        const ctx = getPresetContext(mapping);
+        const value = mapping?.preset_value;
+        const specs = {
+          fan_preset: { domain: "fan", service: "set_preset_mode", field: "preset_mode" },
+          climate_fan_mode: { domain: "climate", service: "set_fan_mode", field: "fan_mode" },
+          climate_preset: { domain: "climate", service: "set_preset_mode", field: "preset_mode" },
+          select_option: { domain: "select", service: "select_option", field: "option" },
+          input_select_option: { domain: "input_select", service: "select_option", field: "option" },
+        };
+        const spec = specs[ctx.actionType];
+        if (!spec) {
+          debug("Unsupported mapping action type", ctx.actionType, mapping);
+          return;
+        }
+        const execute = () => callEntityService(spec.domain, spec.service, ctx.targetEntity, { [spec.field]: value });
+        const targetDomain = String(ctx.targetEntity || "").split(".")[0];
+        const perButtonTurnOn = mapping?.turn_on_first;
+        const shouldTurnOnFirst = ["fan", "climate"].includes(targetDomain)
+          && (perButtonTurnOn === true || (perButtonTurnOn === undefined && config.preset_turn_on_first !== false))
+          && hardOffStates.includes(String(ctx.target?.state || "off"));
+        if (shouldTurnOnFirst) {
+          callEntityService(targetDomain, "turn_on", ctx.targetEntity);
+          const delay = Math.max(0, Number(config.preset_set_delay_ms ?? 350));
+          window.setTimeout(execute, delay);
+        } else {
+          execute();
+        }
       };
 
       card.classList.remove(
         "fan-speed-off", "fan-speed-active", "fan-style-low", "fan-style-medium", "fan-style-high",
         "fan-enable-glow", "fan-spin-enabled", "fan-spin-reverse",
         "fan-preset-pulse", "fan-preset-wobble", "fan-preset-breeze",
-        "fan-layout-control-row", "fan-layout-compact-fill-row", "fan-layout-bottom-control-row", "fan-hide-main-name-state"
+        "fan-layout-control-row", "fan-layout-compact-fill-row", "fan-layout-bottom-control-row", "fan-hide-main-name-state",
+        "fan-custom-card-background", "fan-custom-icon-background", "fan-custom-icon-color",
+        "fan-custom-inactive-background", "fan-custom-inactive-icon", "fan-custom-inactive-text", "fan-custom-inactive-opacity"
       );
+      card.querySelectorAll('[data-fan-speed-visual-action="true"]').forEach(detachAction);
       card.classList.add(fanOff ? "fan-speed-off" : "fan-speed-active");
       if (activeSpeed) card.classList.add(`fan-style-${activeStyleKey}`);
       if (config.sub_button_layout === "control_row") card.classList.add("fan-layout-control-row");
@@ -2465,22 +2731,21 @@ fan_speed_visual_center:
       card.style.setProperty("--fan-sub-button-gap", `${Number(config.sub_button_gap ?? 6)}px`);
       card.style.setProperty("--fan-sub-button-justify", String(config.sub_button_justify || "space-between"));
 
-      const inactiveBg = color("inactive_background", "rgba(255,255,255,0.08)");
-      const inactiveIcon = color("inactive_icon", "");
-      const inactiveText = color("inactive_text", "");
-      const inactiveOpacity = Number(config.inactive_opacity ?? 65) / 100;
-      setVar("--fan-inactive-subbutton-background", inactiveBg);
-      setVar("--fan-inactive-subbutton-icon-color", inactiveIcon);
-      setVar("--fan-inactive-subbutton-text-color", inactiveText);
-      card.style.setProperty("--fan-inactive-subbutton-opacity", String(inactiveOpacity));
+      const inactiveBg = color("inactive_background", "", {}, "inherit");
+      const inactiveIcon = color("inactive_icon", "", {}, "inherit");
+      const inactiveText = color("inactive_text", "", {}, "inherit");
+      const useInactiveOpacity = config.inactive_opacity_mode === "custom";
+      const inactiveOpacity = useInactiveOpacity ? Number(config.inactive_opacity ?? 65) / 100 : "";
+      setScopedVar("--fan-inactive-subbutton-background", inactiveBg, "fan-custom-inactive-background");
+      setScopedVar("--fan-inactive-subbutton-icon-color", inactiveIcon, "fan-custom-inactive-icon");
+      setScopedVar("--fan-inactive-subbutton-text-color", inactiveText, "fan-custom-inactive-text");
+      setScopedVar("--fan-inactive-subbutton-opacity", inactiveOpacity, "fan-custom-inactive-opacity");
 
       const knownTargets = new Set();
       knownTargets.add(Number(config.off_target ?? 1));
       speeds.forEach((s) => { const n = getSpeedButtonNumber(s); if (n) knownTargets.add(n); });
       if (config.enable_direction === true) knownTargets.add(Number(config.direction_sub_button_index ?? 5));
-      if (config.enable_presets === true && Array.isArray(config.preset_mappings)) {
-        config.preset_mappings.forEach((p) => { if (Number(p?.sub_button_index)) knownTargets.add(Number(p.sub_button_index)); });
-      }
+      presetMappings.forEach((p) => { if (Number(p?.sub_button_index)) knownTargets.add(Number(p.sub_button_index)); });
 
       const buttonsToReset = config.clear_all_sub_buttons === true
         ? Array.from(card.querySelectorAll(".bubble-sub-button"))
@@ -2504,9 +2769,9 @@ fan_speed_visual_center:
         styleButton(button, { background: bg, icon: icon || inactiveIcon, text: text || inactiveText, opacity: 1, glow });
       };
 
-      setVar("--fan-card-background", color(`${activeStyleKey}_card`, "", { activeSpeed, styleKey: activeStyleKey }));
-      setVar("--fan-icon-background", color(`${activeStyleKey}_icon_bg`, "", { activeSpeed, styleKey: activeStyleKey }));
-      setVar("--fan-icon-color", color(`${activeStyleKey}_icon`, "", { activeSpeed, styleKey: activeStyleKey }));
+      setScopedVar("--fan-card-background", color(`${activeStyleKey}_card`, "", { activeSpeed, styleKey: activeStyleKey }, "inherit"), "fan-custom-card-background");
+      setScopedVar("--fan-icon-background", color(`${activeStyleKey}_icon_bg`, "", { activeSpeed, styleKey: activeStyleKey }, "inherit"), "fan-custom-icon-background");
+      setScopedVar("--fan-icon-color", color(`${activeStyleKey}_icon`, "", { activeSpeed, styleKey: activeStyleKey }, "inherit"), "fan-custom-icon-color");
 
       const offButton = getSubButton(Number(config.off_target ?? 1));
       const powerMode = config.power_button_mode || "off_only";
@@ -2515,16 +2780,15 @@ fan_speed_visual_center:
         : (config.off_button_icon || config.power_button_off_icon || "mdi:power");
       setIconInButton(offButton, powerIcon);
       attachAction(offButton, () => {
-        if (config.off_action_enabled === false) return;
-        if (powerMode === "toggle" && fanOff) callFanService("turn_on");
-        else callFanService("turn_off");
-      });
+        if (powerMode === "toggle" && fanOff) callControlService("turn_on");
+        else callControlService("turn_off");
+      }, config.off_action_enabled !== false);
       if (fanOff) styleActiveButton(offButton, "off");
 
       speeds.forEach((s) => {
         const btn = getSubButton(getSpeedButtonNumber(s));
         setIconInButton(btn, s.icon);
-        attachAction(btn, () => { if (s.action_enabled !== false) callFanService("set_percentage", { percentage: s.value }); });
+        attachAction(btn, () => callFanService("set_percentage", { percentage: s.value }), s.action_enabled !== false && percentageControlsEnabled);
         if (!presetMatch && activeSpeed && s === activeSpeed) {
           const key = getStyleKeyForSpeed(s);
           styleActiveButton(btn, key, {
@@ -2551,43 +2815,29 @@ fan_speed_visual_center:
         const dirIcon = config.direction_button_icon || (currentDirection === reverseValue ? (config.reverse_icon || "mdi:keyboard-tab-reverse") : (config.forward_icon || "mdi:fast-forward")) || "mdi:swap-horizontal";
         setIconInButton(directionButton, dirIcon);
         attachAction(directionButton, () => {
-          if (config.direction_action_enabled === false) return;
           const next = currentDirection === forwardValue ? reverseValue : forwardValue;
           callFanService("set_direction", { direction: next });
-        });
-        if (shouldHighlightDirection()) styleActiveButton(directionButton, activeSpeed ? activeStyleKey : "off");
+        }, config.direction_action_enabled !== false && controlDomain === "fan");
+        if (shouldHighlightDirection()) styleActiveButton(directionButton, fanOff ? "off" : activeStyleKey);
       }
 
-      if (config.enable_presets === true && Array.isArray(config.preset_mappings)) {
-        config.preset_mappings.forEach((preset) => {
-          const btn = getSubButton(Number(preset?.sub_button_index));
-          if (!btn) return;
-          if (preset.icon) setIconInButton(btn, preset.icon);
-          attachAction(btn, () => {
-            if (preset.action_enabled === false || !preset.preset_value) return;
-            const setPresetMode = () => callFanService("set_preset_mode", { preset_mode: preset.preset_value });
-            const shouldTurnOnFirst = config.preset_turn_on_first !== false && fanOff;
-            if (shouldTurnOnFirst) {
-              callFanService("turn_on");
-              const delay = Math.max(0, Number(config.preset_set_delay_ms ?? 350));
-              window.setTimeout(setPresetMode, delay);
-            } else {
-              setPresetMode();
-            }
+      presetMappings.forEach((preset) => {
+        const btn = getSubButton(Number(preset?.sub_button_index));
+        if (!btn) return;
+        if (preset.icon) setIconInButton(btn, preset.icon);
+        attachAction(btn, () => callMappedAction(preset), preset.action_enabled !== false && !!preset.preset_value);
+        if (isPresetActive(preset)) {
+          const presetStyleKey = normalizeStyleKey(preset.style_preset) || (!fanOff ? activeStyleKey : "low") || "low";
+          styleActiveButton(btn, presetStyleKey, {
+            bg: objectColor(preset, "button_bg", ""),
+            icon: objectColor(preset, "button_icon", ""),
+            text: objectColor(preset, "button_text", ""),
+            glow: objectColor(preset, "glow", ""),
+            glowEnabled: preset.glow_enabled,
+            glowSize: preset.glow_size,
           });
-          if (preset.preset_value && String(preset.preset_value) === currentPreset) {
-            const presetStyleKey = normalizeStyleKey(preset.style_preset) || activeStyleKey || "low";
-            styleActiveButton(btn, presetStyleKey, {
-              bg: objectColor(preset, "button_bg", ""),
-              icon: objectColor(preset, "button_icon", ""),
-              text: objectColor(preset, "button_text", ""),
-              glow: objectColor(preset, "glow", ""),
-              glowEnabled: preset.glow_enabled,
-              glowSize: preset.glow_size,
-            });
-          }
-        });
-      }
+        }
+      });
 
       // Main icon handling is intentionally conservative.
       // Bubble Card owns the configured card name/icon. This module must not
@@ -2599,7 +2849,7 @@ fan_speed_visual_center:
         ? (presetMatch.main_icon || presetMatch.icon || "")
         : "";
 
-      if (presetMatch && presetMainIcon) {
+      if (!fanOff && presetMatch && presetMainIcon) {
         setMainIcon(presetMainIcon);
       } else if (mainBehavior === "active_speed_icon" && fanOff && config.enable_off_icon !== false) {
         setMainIcon(mainOffIcon);
@@ -2612,6 +2862,18 @@ fan_speed_visual_center:
         if (fanOff) requestAnimationFrame(() => setMainIcon(nextMainIcon));
       }
       // keep_card_icon: do nothing. Leave Bubble Card's selected icon alone.
+
+      const mainIconTarget = card.querySelector(".bubble-icon-container") || findMainIcon();
+      const mainIconAction = config.main_icon_action || "bubble_default";
+      if (mainIconAction === "toggle") {
+        attachAction(mainIconTarget, () => callControlService(fanOff ? "turn_on" : "turn_off"));
+      } else if (mainIconAction === "turn_on" || mainIconAction === "turn_off") {
+        attachAction(mainIconTarget, () => callControlService(mainIconAction));
+      } else if (mainIconAction === "none") {
+        attachAction(mainIconTarget, () => {});
+      } else {
+        detachAction(mainIconTarget);
+      }
 
       const presetAnimationMode = presetMatch ? String(presetMatch.animation_mode || "spin") : "";
       const presetAnimationSeconds = Number(presetMatch?.spin_seconds ?? config.default_spin_seconds ?? 1.8);
@@ -2645,40 +2907,60 @@ fan_speed_visual_center:
       return "";
     })()}
 
-    .bubble-button-card-container {
-      background: var(--fan-card-background, var(--ha-card-background, var(--card-background-color))) !important;
+    /* Theme values are only overridden when the corresponding module color is set. */
+    .fan-custom-card-background .bubble-button-card-container {
+      background: var(--fan-card-background) !important;
       transition: background 0.25s ease, box-shadow 0.25s ease !important;
     }
 
-    .bubble-icon-container {
-      background: var(--fan-icon-background, var(--bubble-icon-background-color, var(--bubble-secondary-background-color))) !important;
+    .fan-custom-icon-background .bubble-icon-container {
+      background: var(--fan-icon-background) !important;
       transition: background 0.25s ease, box-shadow 0.25s ease !important;
     }
 
-    .bubble-icon,
-    .bubble-icon-container ha-icon {
-      color: var(--fan-icon-color, inherit) !important;
+    .fan-custom-icon-color .bubble-icon,
+    .fan-custom-icon-color .bubble-icon-container ha-icon {
+      color: var(--fan-icon-color) !important;
       transition: color 0.25s ease, transform 0.25s ease !important;
     }
 
+    .fan-custom-inactive-background .bubble-sub-button {
+      background: var(--fan-inactive-subbutton-background) !important;
+      background-color: var(--fan-inactive-subbutton-background) !important;
+    }
+
+    .fan-custom-inactive-opacity .bubble-sub-button {
+      opacity: var(--fan-inactive-subbutton-opacity) !important;
+    }
+
     .bubble-sub-button {
-      background: var(--fan-inactive-subbutton-background, rgba(255,255,255,0.08)) !important;
-      background-color: var(--fan-inactive-subbutton-background, rgba(255,255,255,0.08)) !important;
-      opacity: var(--fan-inactive-subbutton-opacity, 0.65) !important;
       transition: background 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease !important;
     }
 
-    .bubble-sub-button ha-icon,
-    .bubble-sub-button .bubble-sub-button-icon {
-      color: var(--fan-sub-button-icon-color, var(--fan-inactive-subbutton-icon-color, inherit)) !important;
-      fill: var(--fan-sub-button-icon-color, var(--fan-inactive-subbutton-icon-color, inherit)) !important;
+    .fan-custom-inactive-icon .bubble-sub-button ha-icon,
+    .fan-custom-inactive-icon .bubble-sub-button .bubble-sub-button-icon {
+      color: var(--fan-sub-button-icon-color, var(--fan-inactive-subbutton-icon-color)) !important;
+      fill: var(--fan-sub-button-icon-color, var(--fan-inactive-subbutton-icon-color)) !important;
     }
 
-    .bubble-sub-button .bubble-sub-button-name,
-    .bubble-sub-button .bubble-sub-button-name-container,
-    .bubble-sub-button span,
-    .bubble-sub-button p {
-      color: var(--fan-sub-button-text-color, var(--fan-inactive-subbutton-text-color, inherit)) !important;
+    .fan-custom-inactive-text .bubble-sub-button .bubble-sub-button-name,
+    .fan-custom-inactive-text .bubble-sub-button .bubble-sub-button-name-container,
+    .fan-custom-inactive-text .bubble-sub-button span,
+    .fan-custom-inactive-text .bubble-sub-button p {
+      color: var(--fan-sub-button-text-color, var(--fan-inactive-subbutton-text-color)) !important;
+    }
+
+    .bubble-sub-button[style*="--fan-sub-button-icon-color"] ha-icon,
+    .bubble-sub-button[style*="--fan-sub-button-icon-color"] .bubble-sub-button-icon {
+      color: var(--fan-sub-button-icon-color) !important;
+      fill: var(--fan-sub-button-icon-color) !important;
+    }
+
+    .bubble-sub-button[style*="--fan-sub-button-text-color"] .bubble-sub-button-name,
+    .bubble-sub-button[style*="--fan-sub-button-text-color"] .bubble-sub-button-name-container,
+    .bubble-sub-button[style*="--fan-sub-button-text-color"] span,
+    .bubble-sub-button[style*="--fan-sub-button-text-color"] p {
+      color: var(--fan-sub-button-text-color) !important;
     }
 
     .fan-layout-control-row .bubble-sub-button-container,
