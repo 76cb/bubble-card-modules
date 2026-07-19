@@ -1,6 +1,6 @@
 fan_speed_visual_center:
   name: "Fan Speed Visual Center"
-  version: "v1.3.1"
+  version: "v1.3.2"
   creator: "76cb"
   link: "https://raw.githubusercontent.com/76cb/bubble-card-modules/main/fan_speed_visual_center/fan_speed_visual_center.yaml"
   supported:
@@ -8,8 +8,8 @@ fan_speed_visual_center:
   description: >
     Advanced Bubble Card module for Home Assistant fan and climate fan controls.
     Uses normal Bubble Card sub-buttons or the main icon for Off/Power, fan speed percentages,
-    climate fan modes, fan/climate presets, select and input_select options/dropdowns,
-    optional direction, scalable button mapping, animation, and theme-aware
+    climate fan modes, fan/climate presets, select and input_select options/dropdowns, quick dropdown shortcuts,
+    optional direction/oscillation, scalable button mapping, animation, and theme-aware
     active/inactive/off styling. Off is configured separately.
 
   editor:
@@ -1983,6 +1983,50 @@ fan_speed_visual_center:
                 icon: {}
 
     - type: expandable
+      title: "Oscillation"
+      icon: "mdi:arrow-oscillating"
+      schema:
+        - type: grid
+          column_min_width: "220px"
+          schema:
+            - name: enable_oscillation
+              label: "Enable Oscillation Button"
+              description: "Fan-only helper for integrations that support fan.oscillate."
+              default: false
+              selector:
+                boolean: {}
+            - name: oscillation_sub_button_index
+              label: "Oscillation Button Number"
+              default: 6
+              selector:
+                number:
+                  min: 1
+                  max: 20
+                  step: 1
+                  mode: box
+            - name: oscillation_button_icon
+              label: "Oscillation Button Icon"
+              default: "mdi:arrow-oscillating"
+              selector:
+                icon: {}
+            - name: oscillation_action_enabled
+              label: "Enable Oscillation Tap Action"
+              default: true
+              selector:
+                boolean: {}
+            - name: oscillation_attribute
+              label: "Oscillation Attribute"
+              description: "Attribute used to read whether oscillation is active. Most fan entities use oscillating."
+              default: "oscillating"
+              selector:
+                text: {}
+            - name: highlight_oscillation_button
+              label: "Highlight When Oscillating"
+              default: true
+              selector:
+                boolean: {}
+
+    - type: expandable
       title: "Mode / Select Buttons"
       icon: "mdi:tune-variant"
       schema:
@@ -2017,6 +2061,44 @@ fan_speed_visual_center:
                   step: 50
                   mode: slider
                   unit_of_measurement: "ms"
+            - name: mode_dropdown_entity
+              label: "Mode Dropdown Entity"
+              description: "Optional quick setup. Opens the native Home Assistant dropdown/more-info dialog on the selected sub-button and mirrors the current state. Use this for select/input_select mode helpers or a climate entity."
+              selector:
+                entity:
+                  filter:
+                    - domain: select
+                    - domain: input_select
+                    - domain: climate
+                    - domain: fan
+            - name: mode_dropdown_button
+              label: "Mode Dropdown Button Number"
+              description: "Sub-button number used by the quick Mode Dropdown Entity. Leave blank to use manual Mode / Select Button mappings instead."
+              selector:
+                number:
+                  min: 1
+                  max: 20
+                  step: 1
+                  mode: box
+            - name: speed_dropdown_entity
+              label: "Speed Dropdown Entity"
+              description: "Optional quick setup for fans that expose speed as a select/input_select dropdown instead of percentage. Opens More Info and mirrors the current option."
+              selector:
+                entity:
+                  filter:
+                    - domain: select
+                    - domain: input_select
+                    - domain: fan
+                    - domain: climate
+            - name: speed_dropdown_button
+              label: "Speed Dropdown Button Number"
+              description: "Sub-button number used by the quick Speed Dropdown Entity. Leave blank if speeds are normal percentage buttons."
+              selector:
+                number:
+                  min: 1
+                  max: 20
+                  step: 1
+                  mode: box
         - name: preset_mappings
           label: "Mode / Select Buttons"
           description: "Map fan presets, climate fan modes/presets, select entities, or input_select helpers to existing Bubble Card sub-buttons. Use More info / dropdown for native Home Assistant option pickers."
@@ -2031,6 +2113,7 @@ fan_speed_visual_center:
                     text: {}
                 preset_value:
                   label: "Mode / Option Value"
+                  description: "Required for set-option actions. Leave blank when Action Type is More info / dropdown."
                   selector:
                     text: {}
                 target_entity:
@@ -2063,7 +2146,7 @@ fan_speed_visual_center:
                           value: "select_option"
                         - label: "Input select option"
                           value: "input_select_option"
-                        - label: "More info / dropdown"
+                        - label: "Open dropdown / More Info"
                           value: "more_info"
                 display_mode:
                   label: "Button Display"
@@ -2501,13 +2584,36 @@ fan_speed_visual_center:
         return "";
       };
 
-      const presetMappings = config.enable_presets === true && Array.isArray(config.preset_mappings)
-        ? config.preset_mappings.filter((mapping) => {
-          if (!mapping) return false;
-          const actionType = String(mapping.action_type || "auto");
-          return actionType === "more_info" || (mapping.preset_value !== undefined && mapping.preset_value !== null);
-        })
+      const buildQuickDropdownMapping = (kind, entity, button, label, icon) => {
+        const buttonNumber = Number(button);
+        if (!entity || !Number.isFinite(buttonNumber) || buttonNumber < 1) return null;
+        return {
+          label,
+          target_entity: entity,
+          action_type: "more_info",
+          display_mode: "mirror_state",
+          active_attribute: "state",
+          affect_main_card: false,
+          icon,
+          sub_button_index: buttonNumber,
+          __quick_dropdown: kind,
+        };
+      };
+
+      const quickDropdownMappings = [
+        buildQuickDropdownMapping("mode", config.mode_dropdown_entity, config.mode_dropdown_button, "Mode", "mdi:tune-variant"),
+        buildQuickDropdownMapping("speed", config.speed_dropdown_entity, config.speed_dropdown_button, "Speed", "mdi:fan-speed-2"),
+      ].filter(Boolean);
+
+      const manualPresetMappings = config.enable_presets === true && Array.isArray(config.preset_mappings)
+        ? config.preset_mappings
         : [];
+
+      const presetMappings = [...quickDropdownMappings, ...manualPresetMappings].filter((mapping) => {
+        if (!mapping) return false;
+        const actionType = String(mapping.action_type || "auto");
+        return actionType === "more_info" || (mapping.preset_value !== undefined && mapping.preset_value !== null && String(mapping.preset_value).trim() !== "");
+      });
 
       const inferMappingActionType = (mapping, targetEntity) => {
         const explicit = String(mapping?.action_type || "auto");
@@ -2610,9 +2716,13 @@ fan_speed_visual_center:
 
       const setTextInButton = (button, text) => {
         if (!button || text === undefined || text === null || text === "") return;
-        const label = button.querySelector(".bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, span, p");
-        if (!label) return;
-        label.textContent = String(text);
+        const value = String(text);
+        button.setAttribute("title", value);
+        button.setAttribute("aria-label", value);
+        const label = button.querySelector(".bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, .name, span, p");
+        if (label) label.textContent = value;
+        button.style.setProperty("--fan-sub-button-dynamic-label", JSON.stringify(value));
+        button.dataset.fanSpeedVisualLabel = value;
       };
 
       const getSubButton = (number) => {
@@ -2791,6 +2901,7 @@ fan_speed_visual_center:
       if (!offUsesMainIcon) knownTargets.add(Number(config.off_target ?? 1));
       speeds.forEach((s) => { const n = getSpeedButtonNumber(s); if (n) knownTargets.add(n); });
       if (config.enable_direction === true) knownTargets.add(Number(config.direction_sub_button_index ?? 5));
+      if (config.enable_oscillation === true) knownTargets.add(Number(config.oscillation_sub_button_index ?? 6));
       presetMappings.forEach((p) => { if (Number(p?.sub_button_index)) knownTargets.add(Number(p.sub_button_index)); });
 
       const buttonsToReset = config.clear_all_sub_buttons === true
@@ -2867,12 +2978,21 @@ fan_speed_visual_center:
         if (shouldHighlightDirection()) styleActiveButton(directionButton, fanOff ? "off" : activeStyleKey);
       }
 
+      if (config.enable_oscillation === true) {
+        const oscillationButton = getSubButton(Number(config.oscillation_sub_button_index ?? 6));
+        const oscillationAttribute = config.oscillation_attribute || "oscillating";
+        const oscillating = fan?.attributes?.[oscillationAttribute] === true || String(fan?.attributes?.[oscillationAttribute]).toLowerCase() === "true";
+        setIconInButton(oscillationButton, config.oscillation_button_icon || "mdi:arrow-oscillating");
+        attachAction(oscillationButton, () => callFanService("oscillate", { oscillating: !oscillating }), config.oscillation_action_enabled !== false && controlDomain === "fan");
+        if (config.highlight_oscillation_button !== false && oscillating) styleActiveButton(oscillationButton, fanOff ? "off" : activeStyleKey);
+      }
+
       presetMappings.forEach((preset) => {
         const btn = getSubButton(Number(preset?.sub_button_index));
         if (!btn) return;
         const presetContext = getPresetContext(preset);
         if (preset.icon) setIconInButton(btn, preset.icon);
-        if (preset.display_mode === "mirror_state") setTextInButton(btn, presetContext.currentValue || preset.label || preset.preset_value);
+        if (preset.display_mode === "mirror_state" || preset.action_type === "more_info") setTextInButton(btn, presetContext.currentValue || preset.label || preset.preset_value);
         attachAction(btn, () => callMappedAction(preset), preset.action_enabled !== false && (presetContext.actionType === "more_info" || !!preset.preset_value));
         if (isPresetActive(preset)) {
           const presetStyleKey = normalizeStyleKey(preset.style_preset) || (!fanOff ? activeStyleKey : "low") || "low";
@@ -3014,6 +3134,15 @@ fan_speed_visual_center:
     .bubble-sub-button[style*="--fan-sub-button-text-color"] span,
     .bubble-sub-button[style*="--fan-sub-button-text-color"] p {
       color: var(--fan-sub-button-text-color) !important;
+    }
+
+    .bubble-sub-button[data-fan-speed-visual-label]:not(:has(.bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, .name, span, p))::after {
+      content: var(--fan-sub-button-dynamic-label) !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      margin-inline-start: 4px !important;
+      color: var(--fan-sub-button-text-color, var(--primary-text-color)) !important;
+      white-space: nowrap !important;
     }
 
     .fan-layout-control-row .bubble-sub-button-container,
