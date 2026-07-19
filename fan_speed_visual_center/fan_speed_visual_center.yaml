@@ -1,14 +1,14 @@
 fan_speed_visual_center:
   name: "Fan Speed Visual Center"
-  version: "v1.3.0"
+  version: "v1.3.1"
   creator: "76cb"
-  link: "https://github.com/76cb/bubble-card-modules/tree/main/fan_speed_visual_center"
+  link: "https://raw.githubusercontent.com/76cb/bubble-card-modules/main/fan_speed_visual_center/fan_speed_visual_center.yaml"
   supported:
     - button
   description: >
     Advanced Bubble Card module for Home Assistant fan and climate fan controls.
-    Uses normal Bubble Card sub-buttons for Off/Power, fan speed percentages,
-    climate fan modes, fan/climate presets, select and input_select options,
+    Uses normal Bubble Card sub-buttons or the main icon for Off/Power, fan speed percentages,
+    climate fan modes, fan/climate presets, select and input_select options/dropdowns,
     optional direction, scalable button mapping, animation, and theme-aware
     active/inactive/off styling. Off is configured separately.
 
@@ -50,9 +50,21 @@ fan_speed_visual_center:
         - type: grid
           column_min_width: "220px"
           schema:
+            - name: off_target_mode
+              label: "Off / Power Target"
+              description: "Use a Bubble Card sub-button, or bind Off / Power to the main icon without requiring a sub-button number."
+              default: "sub_button"
+              selector:
+                select:
+                  mode: dropdown
+                  options:
+                    - label: "Sub-button"
+                      value: "sub_button"
+                    - label: "Main icon"
+                      value: "main_icon"
             - name: off_target
               label: "Off / Power Button Number"
-              description: "The Bubble Card sub-button number used for Off / Power. Button numbers start at 1."
+              description: "Used only when Off / Power Target is Sub-button. Button numbers start at 1."
               default: 1
               selector:
                 number:
@@ -2007,7 +2019,7 @@ fan_speed_visual_center:
                   unit_of_measurement: "ms"
         - name: preset_mappings
           label: "Mode / Select Buttons"
-          description: "Map fan presets, climate fan modes/presets, select entities, or input_select helpers to existing Bubble Card sub-buttons."
+          description: "Map fan presets, climate fan modes/presets, select entities, or input_select helpers to existing Bubble Card sub-buttons. Use More info / dropdown for native Home Assistant option pickers."
           selector:
             object:
               multiple: true
@@ -2051,6 +2063,20 @@ fan_speed_visual_center:
                           value: "select_option"
                         - label: "Input select option"
                           value: "input_select_option"
+                        - label: "More info / dropdown"
+                          value: "more_info"
+                display_mode:
+                  label: "Button Display"
+                  description: "Fixed label shows Button Label. Mirror state shows the target entity state or active attribute, which works well for select/input_select dropdown buttons."
+                  default: "fixed"
+                  selector:
+                    select:
+                      mode: dropdown
+                      options:
+                        - label: "Fixed label"
+                          value: "fixed"
+                        - label: "Mirror state / attribute"
+                          value: "mirror_state"
                 active_attribute:
                   label: "Active Attribute"
                   description: "Optional. Auto uses preset_mode, fan_mode, or state based on Action Type. Enter state to compare the entity state directly."
@@ -2476,7 +2502,11 @@ fan_speed_visual_center:
       };
 
       const presetMappings = config.enable_presets === true && Array.isArray(config.preset_mappings)
-        ? config.preset_mappings.filter((mapping) => mapping && mapping.preset_value !== undefined && mapping.preset_value !== null)
+        ? config.preset_mappings.filter((mapping) => {
+          if (!mapping) return false;
+          const actionType = String(mapping.action_type || "auto");
+          return actionType === "more_info" || (mapping.preset_value !== undefined && mapping.preset_value !== null);
+        })
         : [];
 
       const inferMappingActionType = (mapping, targetEntity) => {
@@ -2492,6 +2522,7 @@ fan_speed_visual_center:
       const defaultActiveAttribute = (mapping, actionType) => {
         const configured = String(mapping?.active_attribute || "").trim();
         if (configured) return configured;
+        if (actionType === "more_info") return "state";
         if (actionType === "climate_fan_mode") return "fan_mode";
         if (actionType === "climate_preset" || actionType === "fan_preset") {
           return String(config.preset_attribute || "preset_mode");
@@ -2512,7 +2543,8 @@ fan_speed_visual_center:
 
       const isPresetActive = (mapping) => {
         if (!mapping || mapping.preset_value === undefined || mapping.preset_value === null) return false;
-        const { currentValue } = getPresetContext(mapping);
+        const { currentValue, actionType } = getPresetContext(mapping);
+        if (actionType === "more_info") return false;
         return currentValue === String(mapping.preset_value);
       };
 
@@ -2574,6 +2606,13 @@ fan_speed_visual_center:
         const icon = button.querySelector("ha-icon");
         if (!icon) return;
         try { icon.icon = iconName; icon.setAttribute("icon", iconName); } catch (e) {}
+      };
+
+      const setTextInButton = (button, text) => {
+        if (!button || text === undefined || text === null || text === "") return;
+        const label = button.querySelector(".bubble-sub-button-name, .bubble-sub-button-name-container, .bubble-name, span, p");
+        if (!label) return;
+        label.textContent = String(text);
       };
 
       const getSubButton = (number) => {
@@ -2684,6 +2723,12 @@ fan_speed_visual_center:
       const callMappedAction = (mapping) => {
         const ctx = getPresetContext(mapping);
         const value = mapping?.preset_value;
+        if (ctx.actionType === "more_info") {
+          const event = new Event("hass-more-info", { bubbles: true, composed: true });
+          event.detail = { entityId: ctx.targetEntity };
+          card.dispatchEvent(event);
+          return;
+        }
         const specs = {
           fan_preset: { domain: "fan", service: "set_preset_mode", field: "preset_mode" },
           climate_fan_mode: { domain: "climate", service: "set_fan_mode", field: "fan_mode" },
@@ -2741,8 +2786,9 @@ fan_speed_visual_center:
       setScopedVar("--fan-inactive-subbutton-text-color", inactiveText, "fan-custom-inactive-text");
       setScopedVar("--fan-inactive-subbutton-opacity", inactiveOpacity, "fan-custom-inactive-opacity");
 
+      const offUsesMainIcon = config.off_target_mode === "main_icon";
       const knownTargets = new Set();
-      knownTargets.add(Number(config.off_target ?? 1));
+      if (!offUsesMainIcon) knownTargets.add(Number(config.off_target ?? 1));
       speeds.forEach((s) => { const n = getSpeedButtonNumber(s); if (n) knownTargets.add(n); });
       if (config.enable_direction === true) knownTargets.add(Number(config.direction_sub_button_index ?? 5));
       presetMappings.forEach((p) => { if (Number(p?.sub_button_index)) knownTargets.add(Number(p.sub_button_index)); });
@@ -2773,7 +2819,7 @@ fan_speed_visual_center:
       setScopedVar("--fan-icon-background", color(`${activeStyleKey}_icon_bg`, "", { activeSpeed, styleKey: activeStyleKey }, "inherit"), "fan-custom-icon-background");
       setScopedVar("--fan-icon-color", color(`${activeStyleKey}_icon`, "", { activeSpeed, styleKey: activeStyleKey }, "inherit"), "fan-custom-icon-color");
 
-      const offButton = getSubButton(Number(config.off_target ?? 1));
+      const offButton = offUsesMainIcon ? null : getSubButton(Number(config.off_target ?? 1));
       const powerMode = config.power_button_mode || "off_only";
       const powerIcon = powerMode === "toggle"
         ? (fanOff ? (config.power_button_on_icon || "mdi:power-on") : (config.power_button_off_icon || config.off_button_icon || "mdi:power"))
@@ -2824,8 +2870,10 @@ fan_speed_visual_center:
       presetMappings.forEach((preset) => {
         const btn = getSubButton(Number(preset?.sub_button_index));
         if (!btn) return;
+        const presetContext = getPresetContext(preset);
         if (preset.icon) setIconInButton(btn, preset.icon);
-        attachAction(btn, () => callMappedAction(preset), preset.action_enabled !== false && !!preset.preset_value);
+        if (preset.display_mode === "mirror_state") setTextInButton(btn, presetContext.currentValue || preset.label || preset.preset_value);
+        attachAction(btn, () => callMappedAction(preset), preset.action_enabled !== false && (presetContext.actionType === "more_info" || !!preset.preset_value));
         if (isPresetActive(preset)) {
           const presetStyleKey = normalizeStyleKey(preset.style_preset) || (!fanOff ? activeStyleKey : "low") || "low";
           styleActiveButton(btn, presetStyleKey, {
@@ -2865,7 +2913,12 @@ fan_speed_visual_center:
 
       const mainIconTarget = card.querySelector(".bubble-icon-container") || findMainIcon();
       const mainIconAction = config.main_icon_action || "bubble_default";
-      if (mainIconAction === "toggle") {
+      if (offUsesMainIcon && mainIconAction === "bubble_default") {
+        attachAction(mainIconTarget, () => {
+          if ((config.power_button_mode || "off_only") === "toggle" && fanOff) callControlService("turn_on");
+          else callControlService("turn_off");
+        }, config.off_action_enabled !== false);
+      } else if (mainIconAction === "toggle") {
         attachAction(mainIconTarget, () => callControlService(fanOff ? "turn_on" : "turn_off"));
       } else if (mainIconAction === "turn_on" || mainIconAction === "turn_off") {
         attachAction(mainIconTarget, () => callControlService(mainIconAction));
